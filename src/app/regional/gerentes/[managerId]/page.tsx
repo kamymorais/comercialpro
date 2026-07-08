@@ -50,7 +50,7 @@ export default async function RegionalGerenteDetailPage({
 
         {updated ? (
           <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950">
-            Previsao atualizada com sucesso.
+            Previsão atualizada com sucesso.
           </div>
         ) : null}
 

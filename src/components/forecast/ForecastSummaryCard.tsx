@@ -23,13 +23,13 @@ export function ForecastSummaryCard({ forecast }: ForecastSummaryCardProps) {
           </h2>
         </div>
         <Badge variant={hasSubmission ? "success" : "warning"}>
-          {hasSubmission ? "Enviado" : "Nao enviado"}
+          {hasSubmission ? "Enviado" : "Não enviado"}
         </Badge>
       </div>
 
       <dl className="mt-5 grid gap-4 sm:grid-cols-4">
         <div>
-          <dt className="text-sm text-slate-600">Producao</dt>
+          <dt className="text-sm text-slate-600">Produção</dt>
           <dd className="mt-1 font-bold">{formatBRL(forecast.productionValue)}</dd>
         </div>
         <div>

@@ -16,7 +16,7 @@ export function ManagerSelect({
   return (
     <label className="block w-full" htmlFor={name}>
       <span className="mb-2 block text-sm font-medium text-slate-800">
-        Gerente responsavel
+        Gerente responsável
       </span>
       <select
         id={name}

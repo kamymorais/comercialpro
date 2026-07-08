@@ -11,7 +11,7 @@ const roleLabels: Record<string, string> = {
 
 export function getRoleLabel(role: string | null | undefined): string {
   if (!role) {
-    return "Nao informado";
+    return "Não informado";
   }
 
   return roleLabels[role] ?? role;

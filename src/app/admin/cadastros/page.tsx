@@ -51,7 +51,7 @@ export default async function AdminCadastrosPage({
           <Card>
             <h2 className="text-lg font-bold">Nenhum cadastro pendente</h2>
             <p className="mt-2 text-sm text-slate-600">
-              Quando novos usuarios solicitarem acesso, eles aparecerao aqui.
+              Quando novos usuários solicitarem acesso, eles aparecerão aqui.
             </p>
           </Card>
         ) : (

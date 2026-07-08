@@ -29,7 +29,7 @@ export function PendingUserCard({ user, managers }: PendingUserCardProps) {
           <dd className="mt-1">
             {user.manager
               ? `${user.manager.fullName} (${user.manager.username})`
-              : "Nao se aplica"}
+              : "Não se aplica"}
           </dd>
         </div>
         <div>

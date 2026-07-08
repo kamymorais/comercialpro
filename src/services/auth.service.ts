@@ -82,3 +82,15 @@ export async function loginWithUsernameAndPassword(params: {
     redirectTo: getDashboardPathByRole(user.role),
   };
 }
+
+export async function revokeSessionByToken(token: string): Promise<void> {
+  await prisma.session.updateMany({
+    where: {
+      tokenHash: hashSessionToken(token),
+      revokedAt: null,
+    },
+    data: {
+      revokedAt: new Date(),
+    },
+  });
+}

@@ -13,7 +13,7 @@ export function ConsultantForecastList({
   consultants,
   getHref,
   emptyTitle = "Nenhum consultor aprovado",
-  emptyDescription = "Quando consultores forem aprovados para sua equipe, eles aparecerao aqui.",
+  emptyDescription = "Quando consultores forem aprovados para sua equipe, eles aparecerão aqui.",
 }: ConsultantForecastListProps) {
   if (consultants.length === 0) {
     return (

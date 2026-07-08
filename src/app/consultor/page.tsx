@@ -1,5 +1,6 @@
 import { ForecastForm } from "@/components/forecast/ForecastForm";
 import { ForecastSummaryCard } from "@/components/forecast/ForecastSummaryCard";
+import { LogoutButton } from "@/components/ui/LogoutButton";
 import { requireRole } from "@/lib/auth";
 import { getConsultantForecast } from "@/services/forecast.service";
 
@@ -18,21 +19,24 @@ export default async function ConsultorPage({
   return (
     <main className="min-h-screen bg-slate-50 px-5 py-10 text-slate-950">
       <div className="mx-auto max-w-3xl space-y-6">
-        <header>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">
-            Consultor
-          </p>
-          <h1 className="mt-2 text-3xl font-bold">
-            Bem-vindo, {consultant.fullName}
-          </h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Registre sua previsao de pagamentos do ciclo atual.
-          </p>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">
+              Consultor
+            </p>
+            <h1 className="mt-2 text-3xl font-bold">
+              Bem-vindo, {consultant.fullName}
+            </h1>
+            <p className="mt-2 text-sm text-slate-600">
+              Registre sua previsão de pagamentos do ciclo atual.
+            </p>
+          </div>
+          <LogoutButton />
         </header>
 
         {saved ? (
           <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950">
-            Previsao salva com sucesso.
+            Previsão salva com sucesso.
           </div>
         ) : null}
 

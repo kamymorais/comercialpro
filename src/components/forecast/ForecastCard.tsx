@@ -10,9 +10,9 @@ type ForecastCardProps = {
 };
 
 const statusLabels = {
-  WITH_FORECAST: "Com previsao",
-  NO_FORECAST: "Sem previsao",
-  NOT_SENT: "Nao enviado",
+  WITH_FORECAST: "Com previsão",
+  NO_FORECAST: "Sem previsão",
+  NOT_SENT: "Não enviado",
 };
 
 const statusVariants = {
@@ -39,7 +39,7 @@ export function ForecastCard({ forecast, href }: ForecastCardProps) {
       </div>
 
       <dl className="grid gap-3 text-sm sm:grid-cols-4">
-        <Value label="Producao" value={forecast.productionValue} />
+        <Value label="Produção" value={forecast.productionValue} />
         <Value label="Seguros" value={forecast.insuranceValue} />
         <Value label="TC" value={forecast.tcValue} />
         <Value label="Total" value={forecast.totalValue} strong />

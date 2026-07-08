@@ -12,14 +12,14 @@ export function ForecastForm({ forecast }: ForecastFormProps) {
     <Card>
       <form action={saveForecastAction} className="space-y-4">
         <div>
-          <h2 className="text-xl font-bold">Previsao de pagamentos</h2>
+          <h2 className="text-xl font-bold">Previsão de pagamentos</h2>
           <p className="mt-2 text-sm leading-6 text-slate-600">
             Informe os valores esperados para a data operacional atual.
           </p>
         </div>
 
         <MoneyField
-          label="Producao"
+          label="Produção"
           name="productionValue"
           defaultValue={forecast.productionValue}
         />
@@ -38,7 +38,7 @@ export function ForecastForm({ forecast }: ForecastFormProps) {
             className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-900"
           />
           <span>
-            Nao tenho previsao para hoje. Ao marcar, os valores serao salvos
+            Não tenho previsão para hoje. Ao marcar, os valores serão salvos
             como {formatBRL(0)}.
           </span>
         </label>
@@ -47,7 +47,7 @@ export function ForecastForm({ forecast }: ForecastFormProps) {
           type="submit"
           className="inline-flex min-h-12 w-full items-center justify-center rounded-lg bg-blue-900 px-5 py-3 text-sm font-semibold text-white transition-colors hover:bg-blue-950"
         >
-          Salvar previsao
+          Salvar previsão
         </button>
       </form>
     </Card>

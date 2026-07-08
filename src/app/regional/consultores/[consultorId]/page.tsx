@@ -40,9 +40,9 @@ export default async function RegionalConsultorEditPage({
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">
             Gerente regional
           </p>
-          <h1 className="mt-2 text-3xl font-bold">Editar previsao</h1>
+          <h1 className="mt-2 text-3xl font-bold">Editar previsão</h1>
           <p className="mt-2 text-sm text-slate-600">
-            Ajuste os valores da previsao do consultor para a data operacional
+            Ajuste os valores da previsão do consultor para a data operacional
             atual.
           </p>
         </header>

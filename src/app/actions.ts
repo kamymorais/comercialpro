@@ -1,12 +1,11 @@
+"use server";
+
 import { cookies } from "next/headers";
-import { NextResponse } from "next/server";
-import {
-  SESSION_COOKIE_NAME,
-  SESSION_DURATION_HOURS,
-} from "@/lib/constants";
+import { redirect } from "next/navigation";
+import { SESSION_COOKIE_NAME } from "@/lib/constants";
 import { revokeSessionByToken } from "@/services/auth.service";
 
-export async function POST() {
+export async function logoutAction() {
   const cookieStore = await cookies();
   const token = cookieStore.get(SESSION_COOKIE_NAME)?.value;
 
@@ -22,8 +21,5 @@ export async function POST() {
     path: "/",
   });
 
-  return NextResponse.json({
-    ok: true,
-    sessionDurationHours: SESSION_DURATION_HOURS,
-  });
+  redirect("/login");
 }

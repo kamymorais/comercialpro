@@ -11,9 +11,9 @@ import {
 } from "@/services/forecast.service";
 
 const statusOptions: Array<{ value: ForecastStatus; label: string }> = [
-  { value: "WITH_FORECAST", label: "Com previsao" },
-  { value: "NO_FORECAST", label: "Sem previsao" },
-  { value: "NOT_SENT", label: "Nao enviado" },
+  { value: "WITH_FORECAST", label: "Com previsão" },
+  { value: "NO_FORECAST", label: "Sem previsão" },
+  { value: "NOT_SENT", label: "Não enviado" },
 ];
 
 type AdminPrevisoesPageProps = {
@@ -44,9 +44,9 @@ export default async function AdminPrevisoesPage({
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">
               Admin
             </p>
-            <h1 className="mt-2 text-3xl font-bold">Previsoes</h1>
+            <h1 className="mt-2 text-3xl font-bold">Previsões</h1>
             <p className="mt-2 text-sm text-slate-600">
-              Acompanhe a previsao de pagamentos de toda a operacao.
+              Acompanhe a previsão de pagamentos de toda a operação.
             </p>
           </div>
           <Link className="text-sm font-semibold text-blue-900" href="/admin">
@@ -56,7 +56,7 @@ export default async function AdminPrevisoesPage({
 
         {updated ? (
           <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950">
-            Previsao atualizada com sucesso.
+            Previsão atualizada com sucesso.
           </div>
         ) : null}
 

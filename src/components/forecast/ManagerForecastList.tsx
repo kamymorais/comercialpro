@@ -15,7 +15,7 @@ export function ManagerForecastList({ managers, getHref }: ManagerForecastListPr
       <Card>
         <h2 className="text-lg font-bold">Nenhum gerente aprovado</h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
-          Quando gerentes forem aprovados, eles aparecerao aqui.
+          Quando gerentes forem aprovados, eles aparecerão aqui.
         </p>
       </Card>
     );
@@ -36,15 +36,15 @@ export function ManagerForecastList({ managers, getHref }: ManagerForecastListPr
 
             <dl className="grid gap-3 text-sm sm:grid-cols-4">
               <div>
-                <dt className="text-slate-600">Com previsao</dt>
+                <dt className="text-slate-600">Com previsão</dt>
                 <dd className="mt-1 font-semibold">{manager.withForecastCount}</dd>
               </div>
               <div>
-                <dt className="text-slate-600">Sem previsao</dt>
+                <dt className="text-slate-600">Sem previsão</dt>
                 <dd className="mt-1 font-semibold">{manager.noForecastCount}</dd>
               </div>
               <div>
-                <dt className="text-slate-600">Nao enviado</dt>
+                <dt className="text-slate-600">Não enviado</dt>
                 <dd className="mt-1 font-semibold">{manager.notSentCount}</dd>
               </div>
               <div>

@@ -29,7 +29,7 @@ export function ForecastEditForm({
           <h2 className="text-xl font-bold">{consultantName}</h2>
           <p className="mt-1 text-sm text-slate-600">@{consultantUsername}</p>
           <p className="mt-2 text-sm leading-6 text-slate-600">
-            Editar previsao da data operacional atual.
+            Editar previsão da data operacional atual.
           </p>
         </div>
 
@@ -40,7 +40,7 @@ export function ForecastEditForm({
         ) : null}
 
         <MoneyInput
-          label="Producao"
+          label="Produção"
           name="productionValue"
           defaultValue={formatMoneyInputValue(forecast.productionValue)}
         />
@@ -63,14 +63,14 @@ export function ForecastEditForm({
             className="mt-1 h-4 w-4 rounded border-slate-300 text-blue-900"
           />
           <span>
-            Sem previsao para hoje. Ao marcar, os valores serao salvos como{" "}
+            Sem previsão para hoje. Ao marcar, os valores serão salvos como{" "}
             {formatBRL(0)}.
           </span>
         </label>
 
         <div className="flex flex-col gap-3 sm:flex-row">
           <Button type="submit" className="flex-1">
-            Salvar previsao
+            Salvar previsão
           </Button>
           <Link
             href={backHref}

@@ -1,5 +1,6 @@
 import { ManagerForecastList } from "@/components/forecast/ManagerForecastList";
 import { Card } from "@/components/ui/Card";
+import { LogoutButton } from "@/components/ui/LogoutButton";
 import { requireRole } from "@/lib/auth";
 import { formatDateBR } from "@/lib/dates";
 import { formatBRL } from "@/lib/money";
@@ -18,21 +19,24 @@ export default async function RegionalPage({ searchParams }: RegionalPageProps) 
   return (
     <main className="min-h-screen bg-slate-50 px-5 py-10 text-slate-950">
       <div className="mx-auto max-w-5xl space-y-6">
-        <header>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">
-            Gerente regional
-          </p>
-          <h1 className="mt-2 text-3xl font-bold">
-            Bem-vindo, {regional.fullName}
-          </h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Acompanhe a previsao de pagamentos de toda a regiao.
-          </p>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">
+              Gerente regional
+            </p>
+            <h1 className="mt-2 text-3xl font-bold">
+              Bem-vindo, {regional.fullName}
+            </h1>
+            <p className="mt-2 text-sm text-slate-600">
+              Acompanhe a previsão de pagamentos de toda a região.
+            </p>
+          </div>
+          <LogoutButton />
         </header>
 
         {updated ? (
           <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950">
-            Previsao atualizada com sucesso.
+            Previsão atualizada com sucesso.
           </div>
         ) : null}
 
@@ -51,7 +55,7 @@ export default async function RegionalPage({ searchParams }: RegionalPageProps) 
           </Card>
           <Card>
             <p className="text-sm font-medium text-slate-600">
-              Previa total regional
+              Prévia total regional
             </p>
             <p className="mt-2 text-3xl font-bold">{formatBRL(summary.total)}</p>
           </Card>

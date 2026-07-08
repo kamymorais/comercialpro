@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { Card } from "@/components/ui/Card";
+import { LogoutButton } from "@/components/ui/LogoutButton";
 import { requireRole } from "@/lib/auth";
 import { formatBRL } from "@/lib/money";
 import { getAdminDashboardSummary } from "@/services/admin.service";
@@ -11,16 +12,19 @@ export default async function AdminPage() {
   return (
     <main className="min-h-screen bg-slate-50 px-5 py-10 text-slate-950">
       <div className="mx-auto max-w-5xl space-y-6">
-        <header>
-          <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">
-            Admin
-          </p>
-          <h1 className="mt-2 text-3xl font-bold">
-            Bem-vindo, {admin.fullName}
-          </h1>
-          <p className="mt-2 text-sm text-slate-600">
-            Acompanhe cadastros e a operacao diaria do ComercialPro.
-          </p>
+        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+          <div>
+            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">
+              Admin
+            </p>
+            <h1 className="mt-2 text-3xl font-bold">
+              Bem-vindo, {admin.fullName}
+            </h1>
+            <p className="mt-2 text-sm text-slate-600">
+              Acompanhe cadastros e a operação diária do ComercialPro.
+            </p>
+          </div>
+          <LogoutButton />
         </header>
 
         <section className="grid gap-4 md:grid-cols-3">
@@ -38,7 +42,7 @@ export default async function AdminPage() {
           </Card>
           <Card>
             <p className="text-sm font-medium text-slate-600">
-              Previsao de hoje
+              Previsão de hoje
             </p>
             <p className="mt-2 text-3xl font-bold">
               {formatBRL(summary.todayForecastTotal)}
@@ -50,17 +54,17 @@ export default async function AdminPage() {
           <AdminLinkCard
             href="/admin/cadastros"
             title="Cadastros"
-            description="Aprovar ou rejeitar usuarios pendentes."
+            description="Aprovar ou rejeitar usuários pendentes."
           />
           <AdminLinkCard
             href="/admin/usuarios"
-            title="Usuarios"
-            description="Consulta de usuarios aprovada para etapa futura."
+            title="Usuários"
+            description="Consulta completa de usuários será implementada em etapa futura."
           />
           <AdminLinkCard
             href="/admin/previsoes"
-            title="Previsoes"
-            description="Acompanhamento consolidado previsto para etapa futura."
+            title="Previsões"
+            description="Total geral, total por gerente e status de cada consultor."
           />
         </section>
       </div>

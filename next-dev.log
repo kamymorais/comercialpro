@@ -23,3 +23,19 @@ Creating turbopack project { dir: 'C:\\dev\\comercialpro', testMode: true }
 ✓ Compiled in 9.1s
 ✓ Compiled in 12.3s
 ✓ Compiled in 2.1s
+✓ Compiled in 5.4s
+✓ Compiled in 1765ms
+✓ Finished writing to filesystem cache in 10.0s
+✓ Finished writing to filesystem cache in 15.7s
+✓ Compiled in 23.9s
+✓ Finished writing to filesystem cache in 10.8s
+ GET /login 200 in 3.3s (next.js: 868ms, application-code: 2.5s)
+ GET /login 200 in 218ms (next.js: 46ms, application-code: 172ms)
+ GET /login 200 in 184ms (next.js: 33ms, application-code: 152ms)
+○ Compiling / ...
+○ Compiling /cadastro ...
+ GET /aguardando-aprovacao 200 in 11.7s (next.js: 9.1s, application-code: 2.6s)
+prisma:query SELECT "public"."User"."id", "public"."User"."fullName", "public"."User"."username" FROM "public"."User" WHERE ("public"."User"."status" = CAST($1::text AS "public"."UserStatus") AND "public"."User"."role" = CAST($2::text AS "public"."Role")) ORDER BY "public"."User"."fullName" ASC, "public"."User"."username" ASC OFFSET $3
+✓ Finished filesystem cache database compaction in 38.1s
+ GET / 200 in 4.9s (next.js: 3.3s, application-code: 1618ms)
+ GET / 307 in 171ms (next.js: 28ms, application-code: 143ms)
