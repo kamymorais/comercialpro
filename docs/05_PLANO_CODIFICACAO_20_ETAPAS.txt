@@ -1,0 +1,513 @@
+# COMERCIALPRO — PLANO DE CODIFICAÇÃO EM 20 ETAPAS
+
+Este plano deve ser seguido em ordem.
+
+Objetivo: criar uma aplicação simples, leve, modular, moderna e instalável no celular como PWA.
+
+======================================================================
+ETAPA 01 — CRIAÇÃO DO PROJETO
+======================================================================
+
+Criar projeto Next.js com:
+
+- TypeScript.
+- App Router.
+- Tailwind.
+- ESLint.
+- src directory.
+
+Comando sugerido:
+
+npx create-next-app@latest comercialpro
+
+Configurações esperadas:
+
+- src/app
+- TypeScript ativo.
+- Tailwind ativo.
+- App Router ativo.
+
+======================================================================
+ETAPA 02 — CONFIGURAÇÃO INICIAL DO LAYOUT
+======================================================================
+
+Criar layout visual base:
+
+- AppShell.
+- Header.
+- Container mobile.
+- Card.
+- Button.
+- Input.
+- Badge.
+- Modal.
+
+Objetivo visual:
+
+- Clean.
+- Moderno.
+- Mobile-first.
+- Parecido com app.
+- Sem poluição visual.
+
+======================================================================
+ETAPA 03 — CONFIGURAÇÃO DO BANCO NEON E PRISMA
+======================================================================
+
+Instalar Prisma:
+
+npm install prisma @prisma/client
+npx prisma init
+
+Configurar .env:
+
+DATABASE_URL=""
+SESSION_SECRET=""
+CRON_SECRET=""
+
+Criar lib/prisma.ts com singleton para evitar múltiplas conexões em desenvolvimento.
+
+======================================================================
+ETAPA 04 — MODELAGEM PRISMA
+======================================================================
+
+Criar enums:
+
+- Role.
+- UserStatus.
+- RequestedRole.
+- ResetStatus.
+
+Criar models:
+
+- User.
+- DailyForecast.
+- Session.
+- ResetLog.
+
+Rodar migration:
+
+npx prisma migrate dev --name init
+
+======================================================================
+ETAPA 05 — SEED DO ADMIN
+======================================================================
+
+Criar seed inicial para ADMIN.
+
+Dados mínimos:
+
+- fullName: Administrador
+- username: admin
+- passwordHash: hash da senha definida
+- requestedRole: MANAGER ou CONSULTANT apenas se enum exigir, mas ideal ajustar para permitir ADMIN no seed
+- role: ADMIN
+- status: APPROVED
+
+Melhor opção:
+Adicionar ADMIN também em RequestedRole ou criar requestedRole opcional.
+
+Recomendação:
+requestedRole pode ser nullable para usuário criado diretamente como ADMIN.
+
+======================================================================
+ETAPA 06 — UTILITÁRIOS BASE
+======================================================================
+
+Criar arquivos:
+
+lib/password.ts
+- hashPassword
+- verifyPassword
+
+lib/session.ts
+- createSession
+- getSession
+- destroySession
+
+lib/auth.ts
+- getCurrentUser
+- requireUser
+- requireRole
+
+lib/permissions.ts
+- assertAdmin
+- assertManager
+- assertRegional
+- assertConsultant
+- canManagerEditConsultant
+- canRegionalEditConsultant
+
+lib/money.ts
+- parseMoneyInput
+- formatBRL
+- sumForecastValues
+
+lib/dates.ts
+- getBrazilNow
+- getOperationalDate
+- isAfterDailyResetHour
+
+======================================================================
+ETAPA 07 — TELA DE LOGIN
+======================================================================
+
+Criar rota:
+
+/login
+
+Campos:
+
+- Usuário.
+- Senha.
+- Botão Entrar.
+- Link para Cadastro.
+
+Criar API/action:
+
+- Validar usuário.
+- Validar senha.
+- Validar status APPROVED.
+- Criar sessão de 3 horas.
+- Redirecionar conforme perfil.
+
+======================================================================
+ETAPA 08 — MIDDLEWARE DE PROTEÇÃO
+======================================================================
+
+Criar proteção para rotas privadas.
+
+Regras:
+
+- Sem sessão -> /login.
+- Sessão expirada -> /login.
+- Usuário pendente -> /aguardando-aprovacao.
+- Usuário rejeitado -> /login ou tela de rejeição.
+- Perfil incorreto -> redirecionar para dashboard correta.
+
+Rotas públicas:
+- /login
+- /cadastro
+- /aguardando-aprovacao
+
+Rotas privadas:
+- /admin
+- /consultor
+- /gerente
+- /regional
+
+======================================================================
+ETAPA 09 — TELA DE CADASTRO
+======================================================================
+
+Criar rota:
+
+/cadastro
+
+Campos:
+
+- Nome completo.
+- Usuário de acesso.
+- Senha.
+- Tipo de solicitação.
+- Gerente, somente se tipo for consultor.
+
+Criar endpoint/action para listar gerentes aprovados.
+
+Ao cadastrar:
+
+- Criar User com status PENDING.
+- Guardar requestedRole.
+- Guardar managerId se for consultor.
+- Não liberar acesso até aprovação.
+
+======================================================================
+ETAPA 10 — TELA DE AGUARDANDO APROVAÇÃO
+======================================================================
+
+Criar rota:
+
+/aguardando-aprovacao
+
+Mensagem simples:
+
+"Seu cadastro foi enviado e está aguardando aprovação do administrador."
+
+Opções:
+
+- Voltar para login.
+- Sair.
+
+======================================================================
+ETAPA 11 — PAINEL ADMIN BASE
+======================================================================
+
+Criar rota:
+
+/admin
+
+Cards principais:
+
+- Cadastros pendentes.
+- Usuários aprovados.
+- Prévia total geral.
+- Acesso rápido para previsões.
+
+Criar navegação admin:
+
+- /admin/cadastros
+- /admin/usuarios
+- /admin/previsoes
+
+======================================================================
+ETAPA 12 — APROVAÇÃO DE CADASTROS
+======================================================================
+
+Criar tela:
+
+/admin/cadastros
+
+Funcionalidades:
+
+- Listar pendentes.
+- Ver nome completo.
+- Ver usuário.
+- Ver tipo solicitado.
+- Ver gerente escolhido se for consultor.
+- Aprovar.
+- Rejeitar.
+- Definir perfil final.
+- Definir gerente para consultor.
+
+Regras:
+
+- Apenas ADMIN acessa.
+- Se aprovar como CONSULTANT, exigir managerId.
+- Se aprovar como MANAGER, managerId deve ficar null.
+- Se aprovar como REGIONAL_MANAGER, managerId deve ficar null.
+- Registrar approvedById e approvedAt.
+
+======================================================================
+ETAPA 13 — DASHBOARD CONSULTOR
+======================================================================
+
+Criar rota:
+
+/consultor
+
+Elementos:
+
+- Boas-vindas.
+- Data operacional.
+- Formulário:
+  - Produção.
+  - Seguro.
+  - TC.
+  - Sem previsão.
+- Botão Enviar.
+
+Regras:
+
+- Buscar previsão existente do dia.
+- Se já existir, preencher formulário.
+- Ao enviar, fazer upsert.
+- Se "Sem previsão", zerar valores.
+- Mostrar confirmação simples.
+
+======================================================================
+ETAPA 14 — DASHBOARD GERENTE
+======================================================================
+
+Criar rota:
+
+/gerente
+
+Elementos:
+
+- Boas-vindas.
+- Prévia total.
+- Card "Previsão de Pagamentos".
+- Lista de consultores.
+
+Para cada consultor:
+
+- Nome.
+- Produção.
+- Seguro.
+- TC.
+- Total.
+- Status.
+
+Regras:
+
+- Buscar apenas consultores com managerId = usuário logado.
+- Calcular total no servidor.
+- Consultor sem previsão deve aparecer como zero ou "Sem previsão".
+
+======================================================================
+ETAPA 15 — EDIÇÃO DE CONSULTOR PELO GERENTE
+======================================================================
+
+Criar modal ou página de edição.
+
+Campos:
+
+- Produção.
+- Seguro.
+- TC.
+- Sem previsão.
+
+Regras:
+
+- Gerente só pode editar consultor vinculado a ele.
+- Validar no backend.
+- Salvar updatedById.
+- Atualizar total após salvar.
+
+======================================================================
+ETAPA 16 — DASHBOARD GERENTE REGIONAL
+======================================================================
+
+Criar rota:
+
+/regional
+
+Elementos:
+
+- Boas-vindas.
+- Prévia total regional.
+- Lista de gerentes.
+- Total por gerente.
+
+Ao clicar em gerente:
+
+- Mostrar consultores daquele gerente.
+- Mostrar valores.
+- Permitir clicar no consultor.
+
+Regra MVP:
+- Gerente regional pode ver todos os gerentes aprovados.
+
+Regra futura:
+- Se usar regionalManagerId, gerente regional vê apenas gerentes vinculados a ele.
+
+======================================================================
+ETAPA 17 — EDIÇÃO DE CONSULTOR PELO REGIONAL
+======================================================================
+
+Criar edição igual à do gerente.
+
+Regras:
+
+- Validar perfil REGIONAL_MANAGER.
+- Validar se o consultor está dentro da visão permitida.
+- Salvar updatedById.
+- Atualizar total após salvar.
+
+======================================================================
+ETAPA 18 — PAINEL DE PREVISÕES DO ADMIN
+======================================================================
+
+Criar rota:
+
+/admin/previsoes
+
+Funcionalidades:
+
+- Ver total geral.
+- Ver total por gerente.
+- Ver consultores.
+- Filtrar por gerente.
+- Filtrar por status:
+  - Com previsão.
+  - Sem previsão.
+  - Não enviado.
+- Permitir edição admin.
+
+======================================================================
+ETAPA 19 — RESET DIÁRIO ÀS 19H
+======================================================================
+
+Criar rota:
+
+/api/cron/reset-daily
+
+Regras:
+
+- Proteger com CRON_SECRET.
+- Verificar se já existe ResetLog SUCCESS para operationalDate.
+- Se já existe, retornar SKIPPED.
+- Se não existe, registrar SUCCESS.
+- Não apagar histórico.
+- Garantir que após 19h getOperationalDate passe para o próximo dia.
+
+Cron sugerido:
+- 19h America/Sao_Paulo = geralmente 22h UTC.
+- Configurar conforme hospedagem.
+
+vercel.json exemplo:
+
+{
+  "crons": [
+    {
+      "path": "/api/cron/reset-daily",
+      "schedule": "0 22 * * *"
+    }
+  ]
+}
+
+Importante:
+A lógica principal de reset deve depender de getOperationalDate, não de deletar dados.
+
+======================================================================
+ETAPA 20 — PWA, TESTES E REFINAMENTO FINAL
+======================================================================
+
+Adicionar:
+
+- manifest.webmanifest.
+- Ícones.
+- theme_color.
+- display standalone.
+- start_url.
+- Meta tags mobile.
+
+Testar:
+
+1. Cadastro consultor escolhendo gerente.
+2. Cadastro gerente sem gerente.
+3. Cadastro gerente regional sem gerente.
+4. Admin aprova consultor.
+5. Admin aprova gerente.
+6. Admin aprova regional.
+7. Consultor envia previsão.
+8. Gerente vê consultor.
+9. Gerente edita consultor.
+10. Regional vê gerentes.
+11. Regional vê consultores.
+12. Regional edita consultor.
+13. Admin vê tudo.
+14. Sessão expira em 3h.
+15. Reset às 19h.
+16. PWA instala no celular.
+17. Nenhum secret aparece no frontend.
+
+======================================================================
+RESULTADO ESPERADO
+======================================================================
+
+Ao final das 20 etapas, o sistema deve estar funcional com:
+
+- Cadastro.
+- Aprovação.
+- Login.
+- Perfis.
+- Formulário do consultor.
+- Dashboard gerente.
+- Dashboard regional.
+- Dashboard admin.
+- Reset diário.
+- PWA.
+- Neon.
+- Prisma.
+- Sessão 3h.

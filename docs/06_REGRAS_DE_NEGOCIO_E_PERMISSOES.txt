@@ -1,0 +1,303 @@
+# COMERCIALPRO — REGRAS DE NEGÓCIO E PERMISSÕES
+
+======================================================================
+1. REGRA CENTRAL
+======================================================================
+
+Cada pessoa acessa com seu próprio usuário e senha.
+
+Cada perfil enxerga apenas o que seu nível permite.
+
+O sistema é baseado em hierarquia:
+
+ADMIN
+  -> vê todos
+
+GERENTE_REGIONAL
+  -> vê gerentes
+  -> vê consultores dos gerentes
+  -> edita consultores da sua visão
+
+GERENTE
+  -> vê seus consultores
+  -> edita seus consultores
+
+CONSULTOR
+  -> vê apenas a própria previsão
+  -> edita apenas a própria previsão
+
+======================================================================
+2. REGRAS DO ADMIN
+======================================================================
+
+ADMIN pode:
+
+- Aprovar cadastro.
+- Rejeitar cadastro.
+- Definir perfil.
+- Definir vínculo.
+- Ver todos os usuários.
+- Ver todas as previsões.
+- Editar qualquer previsão.
+- Executar reset manual.
+- Consultar histórico, se implementado.
+
+ADMIN não deve:
+
+- Ter restrição de gerente.
+- Depender de aprovação por outro usuário.
+
+======================================================================
+3. REGRAS DO GERENTE REGIONAL
+======================================================================
+
+GERENTE_REGIONAL pode:
+
+- Ver gerentes.
+- Ver total por gerente.
+- Ver consultores de cada gerente.
+- Ver previsão dos consultores.
+- Editar previsão dos consultores visíveis.
+- Ver prévia total regional.
+
+GERENTE_REGIONAL não deve:
+
+- Aprovar cadastro.
+- Criar usuário diretamente.
+- Alterar perfil de usuário.
+- Ver tela admin.
+
+Observação MVP:
+- O gerente regional pode visualizar todos os gerentes aprovados.
+- Caso no futuro exista mais de um regional com times diferentes, usar regionalManagerId para limitar visão.
+
+======================================================================
+4. REGRAS DO GERENTE
+======================================================================
+
+GERENTE pode:
+
+- Ver consultores vinculados a ele.
+- Ver previsão dos seus consultores.
+- Editar previsão dos seus consultores.
+- Ver prévia total da equipe.
+
+GERENTE não pode:
+
+- Ver consultores de outro gerente.
+- Editar consultor de outro gerente.
+- Aprovar cadastro.
+- Alterar perfil.
+- Ver tela admin.
+- Ver tela regional.
+
+======================================================================
+5. REGRAS DO CONSULTOR
+======================================================================
+
+CONSULTOR pode:
+
+- Ver própria previsão.
+- Enviar própria previsão.
+- Atualizar própria previsão do dia operacional.
+- Marcar sem previsão.
+
+CONSULTOR não pode:
+
+- Ver outro consultor.
+- Ver gerente.
+- Ver regional.
+- Ver admin.
+- Editar previsão de outra pessoa.
+- Aprovar cadastro.
+
+======================================================================
+6. REGRAS DO CADASTRO
+======================================================================
+
+Quando uma pessoa se cadastra:
+
+- O status inicial é PENDING.
+- O perfil final ainda não está liberado.
+- A pessoa não pode acessar área interna.
+
+Se solicitou CONSULTOR:
+
+- Precisa escolher um gerente aprovado.
+- O admin pode validar ou trocar o gerente na aprovação.
+
+Se solicitou GERENTE:
+
+- Não precisa escolher gerente.
+- Admin aprova como gerente.
+
+Se solicitou GERENTE_REGIONAL:
+
+- Não precisa escolher gerente.
+- Admin aprova como gerente regional.
+
+======================================================================
+7. REGRAS DA PREVISÃO
+======================================================================
+
+A previsão possui:
+
+- Produção.
+- Seguro.
+- TC.
+- Sem previsão.
+
+Total da previsão:
+
+produção + seguro + TC
+
+Se "Sem previsão" estiver marcado:
+
+- Produção = 0.
+- Seguro = 0.
+- TC = 0.
+- Total = 0.
+- noForecast = true.
+
+Se houver qualquer valor positivo:
+
+- noForecast = false.
+
+======================================================================
+8. REGRAS DE TOTALIZAÇÃO
+======================================================================
+
+Total do consultor:
+
+- Soma da própria previsão do dia operacional.
+
+Total do gerente:
+
+- Soma da previsão dos consultores vinculados a ele.
+
+Total do gerente regional:
+
+- Soma dos totais dos gerentes visíveis.
+
+Total do admin:
+
+- Soma das previsões de todos os consultores aprovados.
+
+======================================================================
+9. REGRAS DE EDIÇÃO
+======================================================================
+
+Consultor:
+
+- Pode editar apenas sua própria previsão.
+
+Gerente:
+
+- Pode editar apenas consultores com managerId igual ao seu id.
+
+Gerente regional:
+
+- Pode editar consultores dentro da sua visão.
+- No MVP, a visão pode ser todos os gerentes aprovados.
+- Em versão futura, validar pelo regionalManagerId do gerente.
+
+Admin:
+
+- Pode editar qualquer previsão.
+
+Toda edição deve registrar:
+
+- updatedById.
+- updatedAt.
+
+======================================================================
+10. REGRA DO RESET
+======================================================================
+
+O reset acontece diariamente às 19h.
+
+Objetivo:
+
+- Zerar visualmente as previsões do ciclo seguinte.
+
+Não fazer:
+
+- Não deletar histórico.
+- Não apagar registros anteriores.
+- Não sobrescrever previsão antiga.
+
+Fazer:
+
+- Usar operationalDate.
+- Após 19h, a operationalDate muda para a próxima data.
+- Como não existem previsões para a nova operationalDate, os valores aparecem zerados.
+- Registrar ResetLog.
+
+======================================================================
+11. REGRA DE DATA OPERACIONAL
+======================================================================
+
+A data operacional é a data usada para as previsões.
+
+Exemplo:
+
+Dia 08/07/2026 antes das 19h:
+- operationalDate = 08/07/2026
+
+Dia 08/07/2026 depois das 19h:
+- operationalDate = 09/07/2026
+
+Isso permite que a equipe comece a lançar previsão do próximo ciclo após 19h.
+
+======================================================================
+12. REGRAS DE STATUS
+======================================================================
+
+UserStatus:
+
+PENDING:
+- Cadastro enviado.
+- Aguardando admin.
+- Sem acesso operacional.
+
+APPROVED:
+- Cadastro aprovado.
+- Usuário pode acessar.
+
+REJECTED:
+- Cadastro rejeitado.
+- Usuário não pode acessar.
+
+======================================================================
+13. PERMISSÕES POR ROTA
+======================================================================
+
+/login
+- Público.
+
+/cadastro
+- Público.
+
+/aguardando-aprovacao
+- Público ou usuário pendente.
+
+/admin
+- Apenas ADMIN.
+
+/consultor
+- Apenas CONSULTANT.
+
+/gerente
+- Apenas MANAGER.
+
+/regional
+- Apenas REGIONAL_MANAGER.
+
+APIs admin:
+- Apenas ADMIN.
+
+APIs de previsão:
+- CONSULTANT, MANAGER, REGIONAL_MANAGER ou ADMIN conforme ação.
+
+API cron:
+- Apenas chamada autorizada com CRON_SECRET.

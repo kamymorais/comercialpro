@@ -1,0 +1,25 @@
+
+> comercialpro@0.1.0 dev
+> next dev --port 3000
+
+▲ Next.js 16.2.10 (Turbopack)
+- Local:         http://localhost:3000
+- Network:       http://192.168.1.10:3000
+- Environments: .env
+✓ Ready in 1335ms
+Creating turbopack project { dir: 'C:\\dev\\comercialpro', testMode: true }
+
+ GET /login 200 in 1706ms (next.js: 1414ms, application-code: 292ms)
+ GET /login 200 in 47ms (next.js: 8ms, application-code: 39ms)
+○ Compiling /api/cron/reset-daily ...
+ GET /api/cron/reset-daily 500 in 4.2s (next.js: 4.1s, application-code: 59ms)
+ GET /api/cron/reset-daily 500 in 16ms (next.js: 7ms, application-code: 9ms)
+ GET /api/cron/reset-daily 500 in 42ms (next.js: 18ms, application-code: 24ms)
+ GET /api/cron/reset-daily 500 in 34ms (next.js: 18ms, application-code: 15ms)
+✓ Compiled in 5s
+✓ Compiled in 451ms
+✓ Compiled in 4.9s
+✓ Compiled in 14.7s
+✓ Compiled in 9.1s
+✓ Compiled in 12.3s
+✓ Compiled in 2.1s

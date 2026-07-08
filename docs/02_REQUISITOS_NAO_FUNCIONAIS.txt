@@ -1,0 +1,184 @@
+# COMERCIALPRO — REQUISITOS NÃO FUNCIONAIS
+
+======================================================================
+1. PERFORMANCE
+======================================================================
+
+RNF001 — A aplicação deve ser leve.
+
+RNF002 — As telas devem carregar rápido no celular.
+
+RNF003 — Evitar bibliotecas pesadas sem necessidade.
+
+RNF004 — Evitar animações exageradas.
+
+RNF005 — Evitar múltiplas chamadas desnecessárias ao banco.
+
+RNF006 — Usar consultas objetivas e indexadas.
+
+RNF007 — Usar server components e server actions quando fizer sentido.
+
+======================================================================
+2. USABILIDADE
+======================================================================
+
+RNF008 — A interface deve ser mobile-first.
+
+RNF009 — Botões devem ser grandes o suficiente para toque no celular.
+
+RNF010 — Formulários devem ser simples.
+
+RNF011 — Evitar telas poluídas.
+
+RNF012 — Usar cards limpos.
+
+RNF013 — Usar linguagem simples:
+- Produção.
+- Seguro.
+- TC.
+- Sem previsão.
+- Enviar.
+- Prévia total.
+
+RNF014 — Toda tela principal deve ter uma mensagem clara de boas-vindas.
+
+RNF015 — Valores financeiros devem ser exibidos em formato brasileiro.
+
+Exemplo:
+R$ 1.250,00
+
+======================================================================
+3. MANUTENÇÃO
+======================================================================
+
+RNF016 — O código deve ser modular.
+
+RNF017 — Separar componentes visuais de regras de negócio.
+
+RNF018 — Centralizar regras de permissão.
+
+RNF019 — Centralizar regras de data operacional.
+
+RNF020 — Centralizar formatação de moeda.
+
+RNF021 — Criar services para regras principais:
+- user.service.ts
+- auth.service.ts
+- forecast.service.ts
+- approval.service.ts
+- reset.service.ts
+
+RNF022 — Evitar duplicação de lógica.
+
+RNF023 — Criar tipos/enums claros para roles e status.
+
+======================================================================
+4. CUSTO
+======================================================================
+
+RNF024 — O projeto deve ser barato de hospedar.
+
+RNF025 — Preferir stack fullstack única.
+
+RNF026 — Preferir Neon como banco.
+
+RNF027 — Evitar backend separado no MVP.
+
+RNF028 — Evitar filas, workers ou serviços pagos extras no MVP.
+
+RNF029 — Usar cron simples da hospedagem, quando disponível.
+
+======================================================================
+5. SEGURANÇA MÍNIMA OBRIGATÓRIA
+======================================================================
+
+RNF030 — Não expor DATABASE_URL no frontend.
+
+RNF031 — Não expor API key ou senha do banco no frontend.
+
+RNF032 — Não usar NEXT_PUBLIC para variáveis privadas.
+
+RNF033 — Não salvar senha pura no banco.
+
+RNF034 — Usar hash de senha com bcrypt ou argon2.
+
+RNF035 — Usar cookie HTTP-only para sessão.
+
+RNF036 — Não salvar token em localStorage.
+
+RNF037 — Validar permissões no servidor.
+
+RNF038 — Não confiar apenas na ocultação visual de botões.
+
+RNF039 — Nunca retornar passwordHash em respostas para o frontend.
+
+RNF040 — Não logar senha, token, cookie, DATABASE_URL ou secrets.
+
+Observação:
+O projeto não precisa de autenticação complexa no MVP, mas precisa evitar vazamento básico de dados e credenciais.
+
+======================================================================
+6. DISPONIBILIDADE
+======================================================================
+
+RNF041 — A aplicação deve funcionar bem em navegador mobile.
+
+RNF042 — A aplicação deve funcionar bem como PWA.
+
+RNF043 — A aplicação deve funcionar em desktop para o ADMIN.
+
+RNF044 — A aplicação deve suportar uso simultâneo básico de vários usuários.
+
+======================================================================
+7. DESIGN
+======================================================================
+
+RNF045 — Visual clean.
+
+RNF046 — Visual moderno.
+
+RNF047 — Visual com aparência de app.
+
+RNF048 — Layout com cards.
+
+RNF049 — Evitar excesso de tabelas em telas mobile.
+
+RNF050 — Em mobile, usar listas e cards.
+
+RNF051 — Em admin desktop, tabelas podem ser usadas.
+
+RNF052 — Tela inicial deve ter leitura rápida:
+- Nome.
+- Perfil.
+- Prévia total.
+- Ação principal.
+
+======================================================================
+8. AUDITORIA SIMPLES
+======================================================================
+
+RNF053 — Registrar quem editou previsão.
+
+RNF054 — Registrar quando editou.
+
+RNF055 — Registrar quem aprovou cadastro.
+
+RNF056 — Registrar quando aprovou cadastro.
+
+RNF057 — Registrar execução de reset.
+
+======================================================================
+9. EVOLUÇÃO FUTURA
+======================================================================
+
+RNF058 — O projeto deve permitir no futuro:
+- Histórico por período.
+- Exportação CSV.
+- Mais de um gerente regional.
+- Filtros por data.
+- Dashboard com gráficos.
+- Notificações.
+- Recuperação de senha.
+- Logs de auditoria mais detalhados.
+
+RNF059 — Mesmo sem implementar tudo agora, a estrutura não deve impedir evolução.

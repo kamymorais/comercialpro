@@ -1,0 +1,255 @@
+# COMERCIALPRO — REQUISITOS FUNCIONAIS
+
+======================================================================
+1. CADASTRO DE USUÁRIO
+======================================================================
+
+RF001 — O sistema deve permitir que uma pessoa solicite cadastro.
+
+RF002 — A tela de cadastro deve conter:
+- Nome completo.
+- Usuário de acesso.
+- Senha.
+- Tipo de solicitação.
+- Gerente, quando o tipo solicitado for consultor.
+
+RF003 — O tipo de solicitação deve permitir:
+- Consultor.
+- Gerente.
+- Gerente regional.
+
+RF004 — Se o usuário selecionar "Consultor", o sistema deve exibir uma lista de gerentes aprovados.
+
+RF005 — A lista de gerentes deve puxar somente usuários com:
+- role = MANAGER.
+- status = APPROVED.
+
+RF006 — Se o usuário selecionar "Gerente", o campo de gerente não deve aparecer.
+
+RF007 — Se o usuário selecionar "Gerente regional", o campo de gerente não deve aparecer.
+
+RF008 — Todo cadastro novo deve ser criado com status PENDING.
+
+RF009 — Usuário com status PENDING não pode acessar as telas operacionais.
+
+RF010 — Usuário com status REJECTED não pode acessar as telas operacionais.
+
+======================================================================
+2. LOGIN
+======================================================================
+
+RF011 — O sistema deve permitir login com usuário e senha.
+
+RF012 — O sistema deve validar se o usuário existe.
+
+RF013 — O sistema deve validar se a senha confere.
+
+RF014 — O sistema deve validar se o usuário está aprovado.
+
+RF015 — A sessão do usuário deve expirar após 3 horas.
+
+RF016 — Ao expirar a sessão, o sistema deve redirecionar para a tela de login.
+
+RF017 — O sistema deve redirecionar cada perfil para sua dashboard correta.
+
+Direcionamento:
+- ADMIN -> /admin
+- CONSULTANT -> /consultor
+- MANAGER -> /gerente
+- REGIONAL_MANAGER -> /regional
+
+======================================================================
+3. ADMIN
+======================================================================
+
+RF018 — O ADMIN deve visualizar cadastros pendentes.
+
+RF019 — O ADMIN deve aprovar cadastro.
+
+RF020 — O ADMIN deve rejeitar cadastro.
+
+RF021 — O ADMIN deve definir o perfil final do usuário.
+
+RF022 — O ADMIN deve vincular consultor a gerente.
+
+RF023 — O ADMIN deve poder alterar vínculo de consultor com gerente.
+
+RF024 — O ADMIN deve visualizar usuários aprovados.
+
+RF025 — O ADMIN deve visualizar usuários rejeitados.
+
+RF026 — O ADMIN deve visualizar todos os consultores.
+
+RF027 — O ADMIN deve visualizar todos os gerentes.
+
+RF028 — O ADMIN deve visualizar todos os gerentes regionais.
+
+RF029 — O ADMIN deve visualizar todos os lançamentos do dia.
+
+RF030 — O ADMIN deve visualizar total geral do dia.
+
+RF031 — O ADMIN deve poder executar reset manual, se necessário.
+
+======================================================================
+4. CONSULTOR
+======================================================================
+
+RF032 — O CONSULTOR deve acessar uma tela simples de previsão.
+
+RF033 — A tela do CONSULTOR deve conter:
+- Mensagem de boas-vindas.
+- Campo valor da produção.
+- Campo valor do seguro.
+- Campo valor da TC.
+- Opção "Sem previsão".
+- Botão "Enviar".
+
+RF034 — O CONSULTOR só pode visualizar a própria previsão.
+
+RF035 — O CONSULTOR não pode visualizar outros consultores.
+
+RF036 — O CONSULTOR não pode visualizar gerente ou regional.
+
+RF037 — Ao enviar previsão, o sistema deve salvar os dados para a data operacional atual.
+
+RF038 — Se o consultor marcar "Sem previsão", os valores devem ficar zerados.
+
+RF039 — Se o consultor preencher valores, "Sem previsão" deve ficar falso.
+
+RF040 — O consultor pode atualizar a previsão enquanto o ciclo do dia estiver aberto.
+
+======================================================================
+5. GERENTE
+======================================================================
+
+RF041 — O GERENTE deve acessar uma dashboard própria.
+
+RF042 — A dashboard do GERENTE deve conter:
+- Mensagem de boas-vindas.
+- Prévia total da equipe.
+- Botão ou card "Previsão de Pagamentos".
+- Lista de consultores vinculados.
+
+RF043 — O GERENTE deve visualizar somente consultores vinculados a ele.
+
+RF044 — O GERENTE não deve visualizar consultores de outro gerente.
+
+RF045 — O GERENTE deve visualizar para cada consultor:
+- Nome.
+- Valor da produção.
+- Valor do seguro.
+- Valor da TC.
+- Total.
+- Status "Sem previsão", se aplicável.
+
+RF046 — O GERENTE deve poder clicar em um consultor.
+
+RF047 — Ao clicar em um consultor, o GERENTE deve poder editar:
+- Produção.
+- Seguro.
+- TC.
+- Sem previsão.
+
+RF048 — Ao editar previsão de consultor, o sistema deve registrar quem editou.
+
+RF049 — O total do gerente deve ser a soma das previsões dos seus consultores.
+
+======================================================================
+6. GERENTE REGIONAL
+======================================================================
+
+RF050 — O GERENTE_REGIONAL deve acessar uma dashboard própria.
+
+RF051 — A dashboard do GERENTE_REGIONAL deve conter:
+- Mensagem de boas-vindas.
+- Prévia total regional.
+- Lista de gerentes.
+- Total por gerente.
+
+RF052 — O GERENTE_REGIONAL deve poder clicar em um gerente.
+
+RF053 — Ao clicar em um gerente, o sistema deve mostrar os consultores daquele gerente.
+
+RF054 — O GERENTE_REGIONAL deve poder clicar em um consultor.
+
+RF055 — Ao clicar em um consultor, o GERENTE_REGIONAL deve poder editar:
+- Produção.
+- Seguro.
+- TC.
+- Sem previsão.
+
+RF056 — Ao editar previsão de consultor, o sistema deve registrar quem editou.
+
+RF057 — O total regional deve ser a soma dos totais dos gerentes visíveis.
+
+======================================================================
+7. PREVISÃO DIÁRIA
+======================================================================
+
+RF058 — Cada consultor deve ter uma previsão por dia operacional.
+
+RF059 — A previsão deve conter:
+- productionValue.
+- insuranceValue.
+- tcValue.
+- noForecast.
+- submittedAt.
+- updatedAt.
+- updatedById.
+
+RF060 — O total da previsão deve ser:
+productionValue + insuranceValue + tcValue.
+
+RF061 — Se noForecast = true, o total deve ser 0.
+
+RF062 — O sistema deve sempre buscar a previsão da data operacional atual.
+
+======================================================================
+8. RESET DIÁRIO
+======================================================================
+
+RF063 — O sistema deve zerar a visualização diária todos os dias às 19h.
+
+RF064 — O reset não deve apagar histórico.
+
+RF065 — O reset deve registrar execução em ResetLog.
+
+RF066 — O reset deve ser idempotente.
+
+RF067 — Se o reset já foi executado no dia, nova execução não deve duplicar operação.
+
+RF068 — Após reset, os totais de consultores, gerentes e regionais devem aparecer zerados.
+
+======================================================================
+9. PWA
+======================================================================
+
+RF069 — A aplicação deve ser instalável na tela inicial do celular.
+
+RF070 — O sistema deve ter manifest.
+
+RF071 — O sistema deve ter ícones.
+
+RF072 — O sistema deve abrir em modo standalone quando salvo na tela inicial.
+
+RF073 — O layout deve ser responsivo e mobile-first.
+
+======================================================================
+10. REGRAS DE ACESSO
+======================================================================
+
+RF074 — Cada rota deve validar sessão.
+
+RF075 — Cada rota deve validar perfil.
+
+RF076 — O backend deve validar permissões, não apenas o frontend.
+
+RF077 — Usuário não aprovado não deve acessar dados operacionais.
+
+RF078 — Consultor não pode editar outro consultor.
+
+RF079 — Gerente só pode editar consultor vinculado a ele.
+
+RF080 — Gerente regional pode editar consultores visíveis na sua hierarquia.
+
+RF081 — Admin pode editar tudo.

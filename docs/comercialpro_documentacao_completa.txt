@@ -1,0 +1,2749 @@
+==========================================================================================
+00_CONTEXTUALIZACAO_GERAL_Codex_Claude.txt
+==========================================================================================
+# COMERCIALPRO — CONTEXTO GERAL DO PROJETO
+
+Projeto: ComercialPro
+Tipo: Aplicação web leve, modular e instalável na tela inicial do celular como PWA.
+Objetivo principal: registrar e acompanhar previsões diárias de pagamento/produção por consultores, gerentes e gerente regional.
+
+Este documento deve ser lido antes de qualquer codificação por Codex, Claude ou qualquer outro agente de IA.
+
+======================================================================
+1. VISÃO GERAL
+======================================================================
+
+O ComercialPro será uma aplicação web simples, leve, moderna e bem organizada, pensada para uso diário por equipe comercial.
+
+A aplicação precisa funcionar bem no celular, com visual limpo, moderno, rápido e sem excesso de elementos.
+
+A ideia é que o usuário acesse pelo navegador e salve o sistema na tela inicial do celular, funcionando como app instalado. Portanto, o projeto deve ser preparado como PWA.
+
+A aplicação terá:
+
+- Tela de cadastro.
+- Tela de login.
+- Aprovação de cadastros pelo administrador.
+- Perfis com níveis diferentes de acesso.
+- Registro diário de previsão de pagamento.
+- Visualização hierárquica por consultor, gerente e gerente regional.
+- Reset automático diário às 19h, zerando a prévia do dia operacional.
+- Banco Neon/PostgreSQL.
+- Stack simples, preferencialmente usando Next.js fullstack.
+
+======================================================================
+2. PERFIS DO SISTEMA
+======================================================================
+
+O sistema terá quatro tipos principais de usuário:
+
+1. ADMIN
+   - Aprova todos os cadastros.
+   - Define o perfil de cada usuário.
+   - Define vínculo entre consultor e gerente.
+   - Pode visualizar tudo.
+   - Pode editar tudo.
+   - Pode executar reset manual, se necessário.
+
+2. GERENTE_REGIONAL
+   - Tem visão dos gerentes.
+   - Pode clicar em um gerente e visualizar os consultores daquele gerente.
+   - Pode clicar em um consultor e editar a previsão dele.
+   - Visualiza a prévia total geral da sua visão.
+
+3. GERENTE
+   - Visualiza apenas os consultores atrelados a ele.
+   - Visualiza a prévia total da sua equipe.
+   - Pode clicar em um consultor e editar os valores dele.
+   - Não visualiza consultores de outros gerentes.
+
+4. CONSULTOR
+   - Visualiza apenas sua própria tela de formulário.
+   - Preenche diariamente:
+     - Valor da produção.
+     - Valor do seguro.
+     - Valor da TC.
+     - Ou marca como "Sem previsão".
+   - Envia sua previsão do dia.
+
+======================================================================
+3. FLUXO DE CADASTRO
+======================================================================
+
+A tela de cadastro deve solicitar:
+
+- Nome completo.
+- Usuário de acesso.
+- Senha.
+- Tipo de solicitação:
+  - Consultor.
+  - Gerente.
+  - Gerente regional.
+- Campo de seleção de gerente, somente quando o usuário escolher "Consultor".
+
+Regra importante:
+
+- Se o usuário estiver se cadastrando como CONSULTOR, ele precisa escolher um gerente.
+- A lista de gerentes deve puxar apenas gerentes já aprovados pelo ADMIN.
+- Se o usuário estiver se cadastrando como GERENTE, ele não precisa escolher gerente.
+- Se o usuário estiver se cadastrando como GERENTE_REGIONAL, ele também não precisa escolher gerente.
+- Mesmo escolhendo o tipo de solicitação no cadastro, o usuário NÃO define seu próprio perfil final. O ADMIN define na aprovação.
+- Todo cadastro novo deve nascer com status PENDENTE.
+- O usuário só pode acessar o sistema depois de aprovado pelo ADMIN.
+
+======================================================================
+4. FLUXO DE APROVAÇÃO
+======================================================================
+
+O ADMIN terá uma tela para ver cadastros pendentes.
+
+Para cada cadastro, o ADMIN poderá:
+
+- Aprovar.
+- Rejeitar.
+- Definir o perfil final:
+  - CONSULTOR.
+  - GERENTE.
+  - GERENTE_REGIONAL.
+- Se for CONSULTOR, validar ou alterar o gerente vinculado.
+- Se for GERENTE, aprovar sem necessidade de gerente.
+- Se for GERENTE_REGIONAL, aprovar sem necessidade de gerente.
+
+Regras:
+
+- Apenas ADMIN aprova cadastro.
+- Usuário pendente não pode usar o sistema.
+- Usuário rejeitado não pode usar o sistema.
+- Usuário aprovado pode acessar conforme seu perfil.
+
+======================================================================
+5. FUNCIONALIDADE PRINCIPAL
+======================================================================
+
+A funcionalidade principal é a previsão de pagamento do dia.
+
+O CONSULTOR informa diariamente:
+
+- Valor da produção.
+- Valor do seguro.
+- Valor da TC.
+- Ou marca "Sem previsão".
+
+O GERENTE visualiza:
+
+- Todos os consultores vinculados a ele.
+- Valor da produção de cada consultor.
+- Valor do seguro de cada consultor.
+- Valor da TC de cada consultor.
+- Status "Sem previsão", quando marcado.
+- Total da equipe.
+
+O GERENTE_REGIONAL visualiza:
+
+- Lista de gerentes.
+- Total por gerente.
+- Ao clicar em um gerente, visualiza os consultores dele.
+- Ao clicar em um consultor, pode editar os valores.
+- Total geral da visão regional.
+
+O ADMIN visualiza:
+
+- Tudo.
+- Usuários.
+- Cadastros.
+- Previsões.
+- Totais por gerente.
+- Totais por gerente regional.
+- Total geral.
+
+======================================================================
+6. RESET DIÁRIO
+======================================================================
+
+Todo dia, às 19h no horário de Brasília/São Paulo, o sistema deve zerar os valores ativos dos consultores.
+
+O objetivo do reset:
+
+- A previsão do dia seguinte deve começar zerada.
+- Os totais dos gerentes devem zerar.
+- Os totais do gerente regional devem zerar.
+- O ADMIN deve ver os valores zerados para o próximo ciclo.
+
+Recomendação técnica:
+
+- Não apagar o histórico.
+- Criar registros por data.
+- Quando virar o ciclo operacional, a tela deve buscar a previsão da data operacional atual.
+- O reset pode criar registros vazios para o novo dia ou simplesmente fazer a busca retornar zero se não houver previsão para o dia.
+
+Importante:
+
+- Manter histórico é melhor do que apagar.
+- Se o gerente ou admin quiser consultar dias anteriores no futuro, os dados estarão preservados.
+- A operação de reset precisa ser idempotente: se rodar duas vezes no mesmo dia, não pode duplicar nem corromper dados.
+
+======================================================================
+7. SESSÃO E LOGIN
+======================================================================
+
+O login será simples.
+
+Regras:
+
+- Usuário acessa com usuário e senha.
+- Sessão deve expirar após 3 horas.
+- Ao expirar, o usuário volta para o login.
+- Usar cookie HTTP-only.
+- Não expor token em localStorage.
+- Não expor dados sensíveis no frontend.
+- Senha deve ser armazenada com hash simples, mesmo em ambiente de teste.
+
+Observação:
+
+Mesmo o projeto sendo simples, não colocar senha pura no banco. Usar bcrypt ou argon2 evita problema básico e não aumenta complexidade relevante.
+
+======================================================================
+8. PRINCÍPIOS DO PROJETO
+======================================================================
+
+A aplicação deve ser:
+
+- Simples.
+- Leve.
+- Modular.
+- Mobile-first.
+- Bonita.
+- Moderna.
+- Rápida.
+- Fácil de manter.
+- Fácil de evoluir.
+- Sem excesso de autenticação complexa.
+- Sem dependências desnecessárias.
+- Sem backend separado no MVP, se Next.js fullstack for suficiente.
+
+======================================================================
+9. O QUE NÃO FAZER
+======================================================================
+
+Não fazer:
+
+- Não expor DATABASE_URL no frontend.
+- Não usar NEXT_PUBLIC para chaves privadas.
+- Não colocar senha do banco no código.
+- Não criar backend separado sem necessidade.
+- Não criar arquitetura exagerada.
+- Não criar telas poluídas.
+- Não criar regras fora do que foi pedido.
+- Não permitir consultor ver outros consultores.
+- Não permitir gerente ver consultores de outro gerente.
+- Não permitir usuário pendente acessar o sistema.
+- Não apagar histórico no reset.
+- Não depender de planilha externa.
+- Não usar autenticação social no MVP.
+- Não usar pagamento no MVP.
+- Não adicionar funcionalidades complexas sem necessidade.
+
+======================================================================
+10. NOMES INTERNOS RECOMENDADOS
+======================================================================
+
+Nome do projeto:
+- ComercialPro
+
+Nome da aplicação:
+- ComercialPro
+- Previsão Comercial
+- Prévia de Pagamentos
+
+Nome técnico das rotas sugeridas:
+- /login
+- /cadastro
+- /aguardando-aprovacao
+- /admin
+- /admin/cadastros
+- /admin/usuarios
+- /admin/previsoes
+- /consultor
+- /gerente
+- /regional
+
+======================================================================
+11. DIRETRIZ PARA IA
+======================================================================
+
+Ao codificar este projeto:
+
+1. Antes de alterar qualquer arquivo, analisar a estrutura atual.
+2. Não quebrar o que já estiver funcionando.
+3. Implementar em etapas pequenas.
+4. Criar componentes reutilizáveis.
+5. Manter regras no backend/server-side.
+6. Não confiar em dados vindos do frontend.
+7. Validar perfil do usuário em cada ação protegida.
+8. Evitar expor dados de outros perfis.
+9. Manter código simples e legível.
+10. Documentar decisões importantes dentro da pasta docs.
+
+
+
+
+==========================================================================================
+01_REQUISITOS_FUNCIONAIS.txt
+==========================================================================================
+# COMERCIALPRO — REQUISITOS FUNCIONAIS
+
+======================================================================
+1. CADASTRO DE USUÁRIO
+======================================================================
+
+RF001 — O sistema deve permitir que uma pessoa solicite cadastro.
+
+RF002 — A tela de cadastro deve conter:
+- Nome completo.
+- Usuário de acesso.
+- Senha.
+- Tipo de solicitação.
+- Gerente, quando o tipo solicitado for consultor.
+
+RF003 — O tipo de solicitação deve permitir:
+- Consultor.
+- Gerente.
+- Gerente regional.
+
+RF004 — Se o usuário selecionar "Consultor", o sistema deve exibir uma lista de gerentes aprovados.
+
+RF005 — A lista de gerentes deve puxar somente usuários com:
+- role = MANAGER.
+- status = APPROVED.
+
+RF006 — Se o usuário selecionar "Gerente", o campo de gerente não deve aparecer.
+
+RF007 — Se o usuário selecionar "Gerente regional", o campo de gerente não deve aparecer.
+
+RF008 — Todo cadastro novo deve ser criado com status PENDING.
+
+RF009 — Usuário com status PENDING não pode acessar as telas operacionais.
+
+RF010 — Usuário com status REJECTED não pode acessar as telas operacionais.
+
+======================================================================
+2. LOGIN
+======================================================================
+
+RF011 — O sistema deve permitir login com usuário e senha.
+
+RF012 — O sistema deve validar se o usuário existe.
+
+RF013 — O sistema deve validar se a senha confere.
+
+RF014 — O sistema deve validar se o usuário está aprovado.
+
+RF015 — A sessão do usuário deve expirar após 3 horas.
+
+RF016 — Ao expirar a sessão, o sistema deve redirecionar para a tela de login.
+
+RF017 — O sistema deve redirecionar cada perfil para sua dashboard correta.
+
+Direcionamento:
+- ADMIN -> /admin
+- CONSULTANT -> /consultor
+- MANAGER -> /gerente
+- REGIONAL_MANAGER -> /regional
+
+======================================================================
+3. ADMIN
+======================================================================
+
+RF018 — O ADMIN deve visualizar cadastros pendentes.
+
+RF019 — O ADMIN deve aprovar cadastro.
+
+RF020 — O ADMIN deve rejeitar cadastro.
+
+RF021 — O ADMIN deve definir o perfil final do usuário.
+
+RF022 — O ADMIN deve vincular consultor a gerente.
+
+RF023 — O ADMIN deve poder alterar vínculo de consultor com gerente.
+
+RF024 — O ADMIN deve visualizar usuários aprovados.
+
+RF025 — O ADMIN deve visualizar usuários rejeitados.
+
+RF026 — O ADMIN deve visualizar todos os consultores.
+
+RF027 — O ADMIN deve visualizar todos os gerentes.
+
+RF028 — O ADMIN deve visualizar todos os gerentes regionais.
+
+RF029 — O ADMIN deve visualizar todos os lançamentos do dia.
+
+RF030 — O ADMIN deve visualizar total geral do dia.
+
+RF031 — O ADMIN deve poder executar reset manual, se necessário.
+
+======================================================================
+4. CONSULTOR
+======================================================================
+
+RF032 — O CONSULTOR deve acessar uma tela simples de previsão.
+
+RF033 — A tela do CONSULTOR deve conter:
+- Mensagem de boas-vindas.
+- Campo valor da produção.
+- Campo valor do seguro.
+- Campo valor da TC.
+- Opção "Sem previsão".
+- Botão "Enviar".
+
+RF034 — O CONSULTOR só pode visualizar a própria previsão.
+
+RF035 — O CONSULTOR não pode visualizar outros consultores.
+
+RF036 — O CONSULTOR não pode visualizar gerente ou regional.
+
+RF037 — Ao enviar previsão, o sistema deve salvar os dados para a data operacional atual.
+
+RF038 — Se o consultor marcar "Sem previsão", os valores devem ficar zerados.
+
+RF039 — Se o consultor preencher valores, "Sem previsão" deve ficar falso.
+
+RF040 — O consultor pode atualizar a previsão enquanto o ciclo do dia estiver aberto.
+
+======================================================================
+5. GERENTE
+======================================================================
+
+RF041 — O GERENTE deve acessar uma dashboard própria.
+
+RF042 — A dashboard do GERENTE deve conter:
+- Mensagem de boas-vindas.
+- Prévia total da equipe.
+- Botão ou card "Previsão de Pagamentos".
+- Lista de consultores vinculados.
+
+RF043 — O GERENTE deve visualizar somente consultores vinculados a ele.
+
+RF044 — O GERENTE não deve visualizar consultores de outro gerente.
+
+RF045 — O GERENTE deve visualizar para cada consultor:
+- Nome.
+- Valor da produção.
+- Valor do seguro.
+- Valor da TC.
+- Total.
+- Status "Sem previsão", se aplicável.
+
+RF046 — O GERENTE deve poder clicar em um consultor.
+
+RF047 — Ao clicar em um consultor, o GERENTE deve poder editar:
+- Produção.
+- Seguro.
+- TC.
+- Sem previsão.
+
+RF048 — Ao editar previsão de consultor, o sistema deve registrar quem editou.
+
+RF049 — O total do gerente deve ser a soma das previsões dos seus consultores.
+
+======================================================================
+6. GERENTE REGIONAL
+======================================================================
+
+RF050 — O GERENTE_REGIONAL deve acessar uma dashboard própria.
+
+RF051 — A dashboard do GERENTE_REGIONAL deve conter:
+- Mensagem de boas-vindas.
+- Prévia total regional.
+- Lista de gerentes.
+- Total por gerente.
+
+RF052 — O GERENTE_REGIONAL deve poder clicar em um gerente.
+
+RF053 — Ao clicar em um gerente, o sistema deve mostrar os consultores daquele gerente.
+
+RF054 — O GERENTE_REGIONAL deve poder clicar em um consultor.
+
+RF055 — Ao clicar em um consultor, o GERENTE_REGIONAL deve poder editar:
+- Produção.
+- Seguro.
+- TC.
+- Sem previsão.
+
+RF056 — Ao editar previsão de consultor, o sistema deve registrar quem editou.
+
+RF057 — O total regional deve ser a soma dos totais dos gerentes visíveis.
+
+======================================================================
+7. PREVISÃO DIÁRIA
+======================================================================
+
+RF058 — Cada consultor deve ter uma previsão por dia operacional.
+
+RF059 — A previsão deve conter:
+- productionValue.
+- insuranceValue.
+- tcValue.
+- noForecast.
+- submittedAt.
+- updatedAt.
+- updatedById.
+
+RF060 — O total da previsão deve ser:
+productionValue + insuranceValue + tcValue.
+
+RF061 — Se noForecast = true, o total deve ser 0.
+
+RF062 — O sistema deve sempre buscar a previsão da data operacional atual.
+
+======================================================================
+8. RESET DIÁRIO
+======================================================================
+
+RF063 — O sistema deve zerar a visualização diária todos os dias às 19h.
+
+RF064 — O reset não deve apagar histórico.
+
+RF065 — O reset deve registrar execução em ResetLog.
+
+RF066 — O reset deve ser idempotente.
+
+RF067 — Se o reset já foi executado no dia, nova execução não deve duplicar operação.
+
+RF068 — Após reset, os totais de consultores, gerentes e regionais devem aparecer zerados.
+
+======================================================================
+9. PWA
+======================================================================
+
+RF069 — A aplicação deve ser instalável na tela inicial do celular.
+
+RF070 — O sistema deve ter manifest.
+
+RF071 — O sistema deve ter ícones.
+
+RF072 — O sistema deve abrir em modo standalone quando salvo na tela inicial.
+
+RF073 — O layout deve ser responsivo e mobile-first.
+
+======================================================================
+10. REGRAS DE ACESSO
+======================================================================
+
+RF074 — Cada rota deve validar sessão.
+
+RF075 — Cada rota deve validar perfil.
+
+RF076 — O backend deve validar permissões, não apenas o frontend.
+
+RF077 — Usuário não aprovado não deve acessar dados operacionais.
+
+RF078 — Consultor não pode editar outro consultor.
+
+RF079 — Gerente só pode editar consultor vinculado a ele.
+
+RF080 — Gerente regional pode editar consultores visíveis na sua hierarquia.
+
+RF081 — Admin pode editar tudo.
+
+
+
+
+==========================================================================================
+02_REQUISITOS_NAO_FUNCIONAIS.txt
+==========================================================================================
+# COMERCIALPRO — REQUISITOS NÃO FUNCIONAIS
+
+======================================================================
+1. PERFORMANCE
+======================================================================
+
+RNF001 — A aplicação deve ser leve.
+
+RNF002 — As telas devem carregar rápido no celular.
+
+RNF003 — Evitar bibliotecas pesadas sem necessidade.
+
+RNF004 — Evitar animações exageradas.
+
+RNF005 — Evitar múltiplas chamadas desnecessárias ao banco.
+
+RNF006 — Usar consultas objetivas e indexadas.
+
+RNF007 — Usar server components e server actions quando fizer sentido.
+
+======================================================================
+2. USABILIDADE
+======================================================================
+
+RNF008 — A interface deve ser mobile-first.
+
+RNF009 — Botões devem ser grandes o suficiente para toque no celular.
+
+RNF010 — Formulários devem ser simples.
+
+RNF011 — Evitar telas poluídas.
+
+RNF012 — Usar cards limpos.
+
+RNF013 — Usar linguagem simples:
+- Produção.
+- Seguro.
+- TC.
+- Sem previsão.
+- Enviar.
+- Prévia total.
+
+RNF014 — Toda tela principal deve ter uma mensagem clara de boas-vindas.
+
+RNF015 — Valores financeiros devem ser exibidos em formato brasileiro.
+
+Exemplo:
+R$ 1.250,00
+
+======================================================================
+3. MANUTENÇÃO
+======================================================================
+
+RNF016 — O código deve ser modular.
+
+RNF017 — Separar componentes visuais de regras de negócio.
+
+RNF018 — Centralizar regras de permissão.
+
+RNF019 — Centralizar regras de data operacional.
+
+RNF020 — Centralizar formatação de moeda.
+
+RNF021 — Criar services para regras principais:
+- user.service.ts
+- auth.service.ts
+- forecast.service.ts
+- approval.service.ts
+- reset.service.ts
+
+RNF022 — Evitar duplicação de lógica.
+
+RNF023 — Criar tipos/enums claros para roles e status.
+
+======================================================================
+4. CUSTO
+======================================================================
+
+RNF024 — O projeto deve ser barato de hospedar.
+
+RNF025 — Preferir stack fullstack única.
+
+RNF026 — Preferir Neon como banco.
+
+RNF027 — Evitar backend separado no MVP.
+
+RNF028 — Evitar filas, workers ou serviços pagos extras no MVP.
+
+RNF029 — Usar cron simples da hospedagem, quando disponível.
+
+======================================================================
+5. SEGURANÇA MÍNIMA OBRIGATÓRIA
+======================================================================
+
+RNF030 — Não expor DATABASE_URL no frontend.
+
+RNF031 — Não expor API key ou senha do banco no frontend.
+
+RNF032 — Não usar NEXT_PUBLIC para variáveis privadas.
+
+RNF033 — Não salvar senha pura no banco.
+
+RNF034 — Usar hash de senha com bcrypt ou argon2.
+
+RNF035 — Usar cookie HTTP-only para sessão.
+
+RNF036 — Não salvar token em localStorage.
+
+RNF037 — Validar permissões no servidor.
+
+RNF038 — Não confiar apenas na ocultação visual de botões.
+
+RNF039 — Nunca retornar passwordHash em respostas para o frontend.
+
+RNF040 — Não logar senha, token, cookie, DATABASE_URL ou secrets.
+
+Observação:
+O projeto não precisa de autenticação complexa no MVP, mas precisa evitar vazamento básico de dados e credenciais.
+
+======================================================================
+6. DISPONIBILIDADE
+======================================================================
+
+RNF041 — A aplicação deve funcionar bem em navegador mobile.
+
+RNF042 — A aplicação deve funcionar bem como PWA.
+
+RNF043 — A aplicação deve funcionar em desktop para o ADMIN.
+
+RNF044 — A aplicação deve suportar uso simultâneo básico de vários usuários.
+
+======================================================================
+7. DESIGN
+======================================================================
+
+RNF045 — Visual clean.
+
+RNF046 — Visual moderno.
+
+RNF047 — Visual com aparência de app.
+
+RNF048 — Layout com cards.
+
+RNF049 — Evitar excesso de tabelas em telas mobile.
+
+RNF050 — Em mobile, usar listas e cards.
+
+RNF051 — Em admin desktop, tabelas podem ser usadas.
+
+RNF052 — Tela inicial deve ter leitura rápida:
+- Nome.
+- Perfil.
+- Prévia total.
+- Ação principal.
+
+======================================================================
+8. AUDITORIA SIMPLES
+======================================================================
+
+RNF053 — Registrar quem editou previsão.
+
+RNF054 — Registrar quando editou.
+
+RNF055 — Registrar quem aprovou cadastro.
+
+RNF056 — Registrar quando aprovou cadastro.
+
+RNF057 — Registrar execução de reset.
+
+======================================================================
+9. EVOLUÇÃO FUTURA
+======================================================================
+
+RNF058 — O projeto deve permitir no futuro:
+- Histórico por período.
+- Exportação CSV.
+- Mais de um gerente regional.
+- Filtros por data.
+- Dashboard com gráficos.
+- Notificações.
+- Recuperação de senha.
+- Logs de auditoria mais detalhados.
+
+RNF059 — Mesmo sem implementar tudo agora, a estrutura não deve impedir evolução.
+
+
+
+
+==========================================================================================
+03_STACK_E_ARQUITETURA.txt
+==========================================================================================
+# COMERCIALPRO — STACK E ARQUITETURA RECOMENDADA
+
+======================================================================
+1. STACK PRINCIPAL
+======================================================================
+
+Recomendação para o MVP:
+
+- Next.js
+- TypeScript
+- App Router
+- Tailwind CSS
+- Prisma ORM
+- Neon PostgreSQL
+- PWA
+- Cookie HTTP-only para sessão
+- bcrypt ou argon2 para hash de senha
+
+======================================================================
+2. POR QUE NEXT.JS FULLSTACK
+======================================================================
+
+O projeto precisa ser simples e barato.
+
+Next.js fullstack permite ter no mesmo projeto:
+
+- Frontend.
+- Backend.
+- Rotas de API.
+- Server actions.
+- Renderização server-side.
+- Integração direta com Prisma.
+- PWA.
+- Deploy simples.
+
+Isso evita criar:
+
+- Backend separado em Nest.
+- API separada.
+- Mais de um serviço.
+- Mais custo.
+- Mais configuração.
+
+======================================================================
+3. BANCO DE DADOS
+======================================================================
+
+Banco recomendado:
+
+- Neon PostgreSQL.
+
+Motivos:
+
+- Barato.
+- PostgreSQL real.
+- Combina com Prisma.
+- Bom para projetos pequenos e médios.
+- Permite evoluir sem trocar stack.
+
+======================================================================
+4. ORM
+======================================================================
+
+ORM recomendado:
+
+- Prisma.
+
+Motivos:
+
+- Tipagem boa com TypeScript.
+- Migrations organizadas.
+- Modelagem clara.
+- Fácil leitura para Codex/Claude.
+- Facilita manutenção.
+
+======================================================================
+5. AUTENTICAÇÃO
+======================================================================
+
+Autenticação simples, sem sistema pesado.
+
+Recomendação:
+
+- Usuário + senha.
+- Senha com hash.
+- Sessão em cookie HTTP-only.
+- Expiração de 3 horas.
+- Tabela Session no banco ou JWT assinado no cookie.
+
+Opção recomendada para simplicidade:
+
+- Cookie com token aleatório.
+- Token salvo com hash na tabela Session.
+- expiresAt = now + 3h.
+
+Fluxo:
+
+1. Usuário envia username e senha.
+2. Backend valida.
+3. Backend cria sessão.
+4. Backend grava cookie HTTP-only.
+5. Middleware valida cookie.
+6. Se expirado, remove sessão e redireciona para login.
+
+======================================================================
+6. PWA
+======================================================================
+
+A aplicação deve funcionar como app salvo na tela inicial do celular.
+
+Configurações necessárias:
+
+- public/manifest.webmanifest
+- public/icons/icon-192.png
+- public/icons/icon-512.png
+- theme_color
+- background_color
+- display: standalone
+- start_url: /
+- name: ComercialPro
+- short_name: ComercialPro
+
+======================================================================
+7. ESTRUTURA DE PASTAS SUGERIDA
+======================================================================
+
+src/
+  app/
+    login/
+      page.tsx
+    cadastro/
+      page.tsx
+    aguardando-aprovacao/
+      page.tsx
+    admin/
+      page.tsx
+      cadastros/
+        page.tsx
+      usuarios/
+        page.tsx
+      previsoes/
+        page.tsx
+    consultor/
+      page.tsx
+    gerente/
+      page.tsx
+      consultores/
+        page.tsx
+    regional/
+      page.tsx
+      gerentes/
+        page.tsx
+    api/
+      auth/
+        login/
+          route.ts
+        logout/
+          route.ts
+      cadastro/
+        route.ts
+      admin/
+        approve-user/
+          route.ts
+        reject-user/
+          route.ts
+      forecast/
+        route.ts
+      cron/
+        reset-daily/
+          route.ts
+
+  components/
+    ui/
+      Button.tsx
+      Input.tsx
+      Card.tsx
+      MoneyInput.tsx
+      Badge.tsx
+      Modal.tsx
+    layout/
+      AppShell.tsx
+      BottomNav.tsx
+      Header.tsx
+    forecast/
+      ForecastForm.tsx
+      ForecastCard.tsx
+      ConsultantForecastList.tsx
+      ManagerForecastList.tsx
+    users/
+      PendingUserCard.tsx
+      UserRoleSelect.tsx
+      ManagerSelect.tsx
+
+  lib/
+    prisma.ts
+    auth.ts
+    session.ts
+    permissions.ts
+    money.ts
+    dates.ts
+    password.ts
+
+  services/
+    auth.service.ts
+    user.service.ts
+    approval.service.ts
+    forecast.service.ts
+    reset.service.ts
+
+  types/
+    roles.ts
+    forecast.ts
+    user.ts
+
+prisma/
+  schema.prisma
+  migrations/
+  seed.ts
+
+docs/
+  00_CONTEXTUALIZACAO_GERAL_Codex_Claude.txt
+  01_REQUISITOS_FUNCIONAIS.txt
+  02_REQUISITOS_NAO_FUNCIONAIS.txt
+  03_STACK_E_ARQUITETURA.txt
+  04_MODELAGEM_BANCO.txt
+  05_PLANO_CODIFICACAO_20_ETAPAS.txt
+  06_INSTRUCOES_PERMANENTES_CODEX_CLAUDE.txt
+
+======================================================================
+8. PADRÃO DE ROTAS
+======================================================================
+
+Rotas públicas:
+
+- /login
+- /cadastro
+- /aguardando-aprovacao
+
+Rotas protegidas:
+
+- /admin
+- /consultor
+- /gerente
+- /regional
+
+Rotas de API:
+
+- POST /api/auth/login
+- POST /api/auth/logout
+- POST /api/cadastro
+- GET /api/admin/pending-users
+- POST /api/admin/approve-user
+- POST /api/admin/reject-user
+- GET /api/forecast
+- POST /api/forecast
+- PATCH /api/forecast/:id
+- GET /api/cron/reset-daily
+
+======================================================================
+9. PADRÃO DE SERVICES
+======================================================================
+
+auth.service.ts:
+- login
+- logout
+- getCurrentUser
+- validateSession
+
+user.service.ts:
+- createPendingUser
+- listApprovedManagers
+- listUsers
+- getUserById
+
+approval.service.ts:
+- listPendingUsers
+- approveUser
+- rejectUser
+- assignManager
+
+forecast.service.ts:
+- getCurrentOperationalDate
+- upsertConsultantForecast
+- getConsultantForecast
+- getManagerForecasts
+- getRegionalForecasts
+- updateConsultantForecastByManager
+- updateConsultantForecastByRegional
+- getAdminForecasts
+
+reset.service.ts:
+- resetDailyForecasts
+- checkResetAlreadyExecuted
+- createResetLog
+
+permissions.ts:
+- assertAdmin
+- assertManager
+- assertRegional
+- assertConsultant
+- canManagerEditConsultant
+- canRegionalEditConsultant
+
+======================================================================
+10. AMBIENTE
+======================================================================
+
+.env.example:
+
+DATABASE_URL=""
+SESSION_SECRET=""
+CRON_SECRET=""
+APP_URL="http://localhost:3000"
+
+Nunca colocar valores reais no repositório.
+
+======================================================================
+11. DEPLOY
+======================================================================
+
+Opção simples:
+
+- Vercel para Next.js.
+- Neon para banco.
+- Cron da Vercel chamando /api/cron/reset-daily.
+
+Opção alternativa:
+
+- Render Web Service.
+- Neon para banco.
+- Cron externo ou cron job do Render, se disponível.
+
+Para MVP, preferir Vercel + Neon pela simplicidade.
+
+
+
+
+==========================================================================================
+04_MODELAGEM_BANCO_PRISMA.txt
+==========================================================================================
+# COMERCIALPRO — MODELAGEM DO BANCO / PRISMA
+
+======================================================================
+1. VISÃO GERAL
+======================================================================
+
+Banco: PostgreSQL no Neon.
+ORM: Prisma.
+
+A modelagem precisa atender:
+
+- Cadastro pendente.
+- Aprovação pelo admin.
+- Perfis hierárquicos.
+- Consultor vinculado a gerente.
+- Previsão diária por consultor.
+- Edição por gerente/regional/admin.
+- Reset diário sem apagar histórico.
+- Sessão com expiração de 3 horas.
+
+======================================================================
+2. ENUMS
+======================================================================
+
+enum Role {
+  ADMIN
+  REGIONAL_MANAGER
+  MANAGER
+  CONSULTANT
+}
+
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RequestedRole {
+  REGIONAL_MANAGER
+  MANAGER
+  CONSULTANT
+}
+
+enum ResetStatus {
+  SUCCESS
+  SKIPPED
+  ERROR
+}
+
+======================================================================
+3. MODEL USER
+======================================================================
+
+User representa qualquer pessoa do sistema.
+
+Campos recomendados:
+
+- id
+- fullName
+- username
+- passwordHash
+- requestedRole
+- role
+- status
+- managerId
+- regionalManagerId
+- approvedById
+- approvedAt
+- rejectedAt
+- createdAt
+- updatedAt
+
+Regras:
+
+- username deve ser único.
+- passwordHash nunca deve ser enviado para o frontend.
+- role pode ser nulo enquanto o usuário estiver pendente.
+- requestedRole registra o que a pessoa pediu no cadastro.
+- status inicia como PENDING.
+- managerId é usado para consultor.
+- regionalManagerId pode ser usado para vincular gerente a regional no futuro.
+
+======================================================================
+4. MODEL DAILY FORECAST
+======================================================================
+
+DailyForecast representa a previsão diária de um consultor.
+
+Campos recomendados:
+
+- id
+- consultantId
+- operationalDate
+- productionValue
+- insuranceValue
+- tcValue
+- noForecast
+- submittedAt
+- updatedById
+- createdAt
+- updatedAt
+
+Regras:
+
+- Deve existir no máximo uma previsão por consultor por data operacional.
+- Criar unique composto:
+  - consultantId + operationalDate
+- Valores monetários devem usar Decimal.
+- Se noForecast = true, os valores devem ser tratados como zero.
+- updatedById registra quem fez a última edição.
+
+======================================================================
+5. MODEL SESSION
+======================================================================
+
+Session representa a sessão de login.
+
+Campos recomendados:
+
+- id
+- userId
+- tokenHash
+- expiresAt
+- createdAt
+- revokedAt
+
+Regras:
+
+- Sessão expira após 3 horas.
+- tokenHash é salvo no banco.
+- Cookie guarda o token bruto.
+- Nunca salvar token bruto em log.
+- Se expiresAt < now, sessão inválida.
+
+======================================================================
+6. MODEL RESET LOG
+======================================================================
+
+ResetLog registra execução do reset diário.
+
+Campos recomendados:
+
+- id
+- operationalDate
+- executedAt
+- status
+- message
+
+Regras:
+
+- operationalDate deve ser único.
+- Se já existir ResetLog SUCCESS para a data, não executar reset novamente.
+- O reset deve ser idempotente.
+
+======================================================================
+7. SCHEMA PRISMA SUGERIDO
+======================================================================
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  ADMIN
+  REGIONAL_MANAGER
+  MANAGER
+  CONSULTANT
+}
+
+enum UserStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum RequestedRole {
+  REGIONAL_MANAGER
+  MANAGER
+  CONSULTANT
+}
+
+enum ResetStatus {
+  SUCCESS
+  SKIPPED
+  ERROR
+}
+
+model User {
+  id                 String        @id @default(cuid())
+  fullName           String
+  username           String        @unique
+  passwordHash       String
+  requestedRole      RequestedRole
+  role               Role?
+  status             UserStatus    @default(PENDING)
+
+  managerId          String?
+  manager            User?         @relation("ManagerConsultants", fields: [managerId], references: [id])
+  consultants        User[]        @relation("ManagerConsultants")
+
+  regionalManagerId  String?
+  regionalManager    User?         @relation("RegionalManagers", fields: [regionalManagerId], references: [id])
+  managers           User[]        @relation("RegionalManagers")
+
+  approvedById       String?
+  approvedBy         User?         @relation("ApprovedUsers", fields: [approvedById], references: [id])
+  approvedUsers      User[]        @relation("ApprovedUsers")
+
+  approvedAt         DateTime?
+  rejectedAt         DateTime?
+
+  sessions           Session[]
+  forecasts          DailyForecast[] @relation("ConsultantForecasts")
+  updatedForecasts   DailyForecast[] @relation("ForecastUpdatedBy")
+
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  @@index([status])
+  @@index([role])
+  @@index([managerId])
+  @@index([regionalManagerId])
+}
+
+model DailyForecast {
+  id               String    @id @default(cuid())
+  consultantId     String
+  consultant       User      @relation("ConsultantForecasts", fields: [consultantId], references: [id])
+
+  operationalDate  DateTime
+
+  productionValue  Decimal   @default(0) @db.Decimal(12, 2)
+  insuranceValue   Decimal   @default(0) @db.Decimal(12, 2)
+  tcValue          Decimal   @default(0) @db.Decimal(12, 2)
+
+  noForecast       Boolean   @default(false)
+  submittedAt      DateTime?
+
+  updatedById      String?
+  updatedBy        User?     @relation("ForecastUpdatedBy", fields: [updatedById], references: [id])
+
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@unique([consultantId, operationalDate])
+  @@index([operationalDate])
+  @@index([consultantId])
+}
+
+model Session {
+  id          String    @id @default(cuid())
+  userId      String
+  user        User      @relation(fields: [userId], references: [id])
+
+  tokenHash   String    @unique
+  expiresAt   DateTime
+  revokedAt   DateTime?
+
+  createdAt   DateTime  @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+}
+
+model ResetLog {
+  id               String      @id @default(cuid())
+  operationalDate  DateTime    @unique
+  executedAt       DateTime    @default(now())
+  status           ResetStatus
+  message          String?
+
+  createdAt        DateTime    @default(now())
+}
+
+======================================================================
+8. REGRA DE DATA OPERACIONAL
+======================================================================
+
+O sistema zera às 19h.
+
+Existem duas formas:
+
+FORMA SIMPLES:
+- Usar a data calendário do Brasil.
+- Às 19h, cron marca reset para o dia.
+- A partir do reset, novas previsões são da próxima data.
+
+FORMA RECOMENDADA:
+- Criar função getOperationalDate().
+- Se horário atual for antes de 19h, operationalDate = data atual.
+- Se horário atual for igual ou depois de 19h, operationalDate = próxima data.
+
+Exemplo:
+- 08/07/2026 18:30 -> operationalDate = 08/07/2026
+- 08/07/2026 19:01 -> operationalDate = 09/07/2026
+
+Isso faz o sistema "zerar" sem apagar dados.
+
+======================================================================
+9. CONSULTAS IMPORTANTES
+======================================================================
+
+Total do consultor:
+- Buscar DailyForecast do consultantId na operationalDate atual.
+
+Total do gerente:
+- Buscar consultores com managerId = gerente.id.
+- Buscar previsões da operationalDate atual.
+- Somar productionValue + insuranceValue + tcValue.
+
+Total do regional:
+- Buscar gerentes.
+- Buscar consultores dos gerentes.
+- Buscar previsões da operationalDate atual.
+- Somar valores.
+
+Total admin:
+- Buscar todos os consultores aprovados.
+- Buscar previsões da operationalDate atual.
+- Somar valores.
+
+======================================================================
+10. OBSERVAÇÃO SOBRE HISTÓRICO
+======================================================================
+
+Não deletar DailyForecast no reset.
+
+O reset visual acontece porque a aplicação muda a data operacional.
+
+Esse modelo permite histórico futuro sem retrabalho.
+
+
+
+
+==========================================================================================
+05_PLANO_CODIFICACAO_20_ETAPAS.txt
+==========================================================================================
+# COMERCIALPRO — PLANO DE CODIFICAÇÃO EM 20 ETAPAS
+
+Este plano deve ser seguido em ordem.
+
+Objetivo: criar uma aplicação simples, leve, modular, moderna e instalável no celular como PWA.
+
+======================================================================
+ETAPA 01 — CRIAÇÃO DO PROJETO
+======================================================================
+
+Criar projeto Next.js com:
+
+- TypeScript.
+- App Router.
+- Tailwind.
+- ESLint.
+- src directory.
+
+Comando sugerido:
+
+npx create-next-app@latest comercialpro
+
+Configurações esperadas:
+
+- src/app
+- TypeScript ativo.
+- Tailwind ativo.
+- App Router ativo.
+
+======================================================================
+ETAPA 02 — CONFIGURAÇÃO INICIAL DO LAYOUT
+======================================================================
+
+Criar layout visual base:
+
+- AppShell.
+- Header.
+- Container mobile.
+- Card.
+- Button.
+- Input.
+- Badge.
+- Modal.
+
+Objetivo visual:
+
+- Clean.
+- Moderno.
+- Mobile-first.
+- Parecido com app.
+- Sem poluição visual.
+
+======================================================================
+ETAPA 03 — CONFIGURAÇÃO DO BANCO NEON E PRISMA
+======================================================================
+
+Instalar Prisma:
+
+npm install prisma @prisma/client
+npx prisma init
+
+Configurar .env:
+
+DATABASE_URL=""
+SESSION_SECRET=""
+CRON_SECRET=""
+
+Criar lib/prisma.ts com singleton para evitar múltiplas conexões em desenvolvimento.
+
+======================================================================
+ETAPA 04 — MODELAGEM PRISMA
+======================================================================
+
+Criar enums:
+
+- Role.
+- UserStatus.
+- RequestedRole.
+- ResetStatus.
+
+Criar models:
+
+- User.
+- DailyForecast.
+- Session.
+- ResetLog.
+
+Rodar migration:
+
+npx prisma migrate dev --name init
+
+======================================================================
+ETAPA 05 — SEED DO ADMIN
+======================================================================
+
+Criar seed inicial para ADMIN.
+
+Dados mínimos:
+
+- fullName: Administrador
+- username: admin
+- passwordHash: hash da senha definida
+- requestedRole: MANAGER ou CONSULTANT apenas se enum exigir, mas ideal ajustar para permitir ADMIN no seed
+- role: ADMIN
+- status: APPROVED
+
+Melhor opção:
+Adicionar ADMIN também em RequestedRole ou criar requestedRole opcional.
+
+Recomendação:
+requestedRole pode ser nullable para usuário criado diretamente como ADMIN.
+
+======================================================================
+ETAPA 06 — UTILITÁRIOS BASE
+======================================================================
+
+Criar arquivos:
+
+lib/password.ts
+- hashPassword
+- verifyPassword
+
+lib/session.ts
+- createSession
+- getSession
+- destroySession
+
+lib/auth.ts
+- getCurrentUser
+- requireUser
+- requireRole
+
+lib/permissions.ts
+- assertAdmin
+- assertManager
+- assertRegional
+- assertConsultant
+- canManagerEditConsultant
+- canRegionalEditConsultant
+
+lib/money.ts
+- parseMoneyInput
+- formatBRL
+- sumForecastValues
+
+lib/dates.ts
+- getBrazilNow
+- getOperationalDate
+- isAfterDailyResetHour
+
+======================================================================
+ETAPA 07 — TELA DE LOGIN
+======================================================================
+
+Criar rota:
+
+/login
+
+Campos:
+
+- Usuário.
+- Senha.
+- Botão Entrar.
+- Link para Cadastro.
+
+Criar API/action:
+
+- Validar usuário.
+- Validar senha.
+- Validar status APPROVED.
+- Criar sessão de 3 horas.
+- Redirecionar conforme perfil.
+
+======================================================================
+ETAPA 08 — MIDDLEWARE DE PROTEÇÃO
+======================================================================
+
+Criar proteção para rotas privadas.
+
+Regras:
+
+- Sem sessão -> /login.
+- Sessão expirada -> /login.
+- Usuário pendente -> /aguardando-aprovacao.
+- Usuário rejeitado -> /login ou tela de rejeição.
+- Perfil incorreto -> redirecionar para dashboard correta.
+
+Rotas públicas:
+- /login
+- /cadastro
+- /aguardando-aprovacao
+
+Rotas privadas:
+- /admin
+- /consultor
+- /gerente
+- /regional
+
+======================================================================
+ETAPA 09 — TELA DE CADASTRO
+======================================================================
+
+Criar rota:
+
+/cadastro
+
+Campos:
+
+- Nome completo.
+- Usuário de acesso.
+- Senha.
+- Tipo de solicitação.
+- Gerente, somente se tipo for consultor.
+
+Criar endpoint/action para listar gerentes aprovados.
+
+Ao cadastrar:
+
+- Criar User com status PENDING.
+- Guardar requestedRole.
+- Guardar managerId se for consultor.
+- Não liberar acesso até aprovação.
+
+======================================================================
+ETAPA 10 — TELA DE AGUARDANDO APROVAÇÃO
+======================================================================
+
+Criar rota:
+
+/aguardando-aprovacao
+
+Mensagem simples:
+
+"Seu cadastro foi enviado e está aguardando aprovação do administrador."
+
+Opções:
+
+- Voltar para login.
+- Sair.
+
+======================================================================
+ETAPA 11 — PAINEL ADMIN BASE
+======================================================================
+
+Criar rota:
+
+/admin
+
+Cards principais:
+
+- Cadastros pendentes.
+- Usuários aprovados.
+- Prévia total geral.
+- Acesso rápido para previsões.
+
+Criar navegação admin:
+
+- /admin/cadastros
+- /admin/usuarios
+- /admin/previsoes
+
+======================================================================
+ETAPA 12 — APROVAÇÃO DE CADASTROS
+======================================================================
+
+Criar tela:
+
+/admin/cadastros
+
+Funcionalidades:
+
+- Listar pendentes.
+- Ver nome completo.
+- Ver usuário.
+- Ver tipo solicitado.
+- Ver gerente escolhido se for consultor.
+- Aprovar.
+- Rejeitar.
+- Definir perfil final.
+- Definir gerente para consultor.
+
+Regras:
+
+- Apenas ADMIN acessa.
+- Se aprovar como CONSULTANT, exigir managerId.
+- Se aprovar como MANAGER, managerId deve ficar null.
+- Se aprovar como REGIONAL_MANAGER, managerId deve ficar null.
+- Registrar approvedById e approvedAt.
+
+======================================================================
+ETAPA 13 — DASHBOARD CONSULTOR
+======================================================================
+
+Criar rota:
+
+/consultor
+
+Elementos:
+
+- Boas-vindas.
+- Data operacional.
+- Formulário:
+  - Produção.
+  - Seguro.
+  - TC.
+  - Sem previsão.
+- Botão Enviar.
+
+Regras:
+
+- Buscar previsão existente do dia.
+- Se já existir, preencher formulário.
+- Ao enviar, fazer upsert.
+- Se "Sem previsão", zerar valores.
+- Mostrar confirmação simples.
+
+======================================================================
+ETAPA 14 — DASHBOARD GERENTE
+======================================================================
+
+Criar rota:
+
+/gerente
+
+Elementos:
+
+- Boas-vindas.
+- Prévia total.
+- Card "Previsão de Pagamentos".
+- Lista de consultores.
+
+Para cada consultor:
+
+- Nome.
+- Produção.
+- Seguro.
+- TC.
+- Total.
+- Status.
+
+Regras:
+
+- Buscar apenas consultores com managerId = usuário logado.
+- Calcular total no servidor.
+- Consultor sem previsão deve aparecer como zero ou "Sem previsão".
+
+======================================================================
+ETAPA 15 — EDIÇÃO DE CONSULTOR PELO GERENTE
+======================================================================
+
+Criar modal ou página de edição.
+
+Campos:
+
+- Produção.
+- Seguro.
+- TC.
+- Sem previsão.
+
+Regras:
+
+- Gerente só pode editar consultor vinculado a ele.
+- Validar no backend.
+- Salvar updatedById.
+- Atualizar total após salvar.
+
+======================================================================
+ETAPA 16 — DASHBOARD GERENTE REGIONAL
+======================================================================
+
+Criar rota:
+
+/regional
+
+Elementos:
+
+- Boas-vindas.
+- Prévia total regional.
+- Lista de gerentes.
+- Total por gerente.
+
+Ao clicar em gerente:
+
+- Mostrar consultores daquele gerente.
+- Mostrar valores.
+- Permitir clicar no consultor.
+
+Regra MVP:
+- Gerente regional pode ver todos os gerentes aprovados.
+
+Regra futura:
+- Se usar regionalManagerId, gerente regional vê apenas gerentes vinculados a ele.
+
+======================================================================
+ETAPA 17 — EDIÇÃO DE CONSULTOR PELO REGIONAL
+======================================================================
+
+Criar edição igual à do gerente.
+
+Regras:
+
+- Validar perfil REGIONAL_MANAGER.
+- Validar se o consultor está dentro da visão permitida.
+- Salvar updatedById.
+- Atualizar total após salvar.
+
+======================================================================
+ETAPA 18 — PAINEL DE PREVISÕES DO ADMIN
+======================================================================
+
+Criar rota:
+
+/admin/previsoes
+
+Funcionalidades:
+
+- Ver total geral.
+- Ver total por gerente.
+- Ver consultores.
+- Filtrar por gerente.
+- Filtrar por status:
+  - Com previsão.
+  - Sem previsão.
+  - Não enviado.
+- Permitir edição admin.
+
+======================================================================
+ETAPA 19 — RESET DIÁRIO ÀS 19H
+======================================================================
+
+Criar rota:
+
+/api/cron/reset-daily
+
+Regras:
+
+- Proteger com CRON_SECRET.
+- Verificar se já existe ResetLog SUCCESS para operationalDate.
+- Se já existe, retornar SKIPPED.
+- Se não existe, registrar SUCCESS.
+- Não apagar histórico.
+- Garantir que após 19h getOperationalDate passe para o próximo dia.
+
+Cron sugerido:
+- 19h America/Sao_Paulo = geralmente 22h UTC.
+- Configurar conforme hospedagem.
+
+vercel.json exemplo:
+
+{
+  "crons": [
+    {
+      "path": "/api/cron/reset-daily",
+      "schedule": "0 22 * * *"
+    }
+  ]
+}
+
+Importante:
+A lógica principal de reset deve depender de getOperationalDate, não de deletar dados.
+
+======================================================================
+ETAPA 20 — PWA, TESTES E REFINAMENTO FINAL
+======================================================================
+
+Adicionar:
+
+- manifest.webmanifest.
+- Ícones.
+- theme_color.
+- display standalone.
+- start_url.
+- Meta tags mobile.
+
+Testar:
+
+1. Cadastro consultor escolhendo gerente.
+2. Cadastro gerente sem gerente.
+3. Cadastro gerente regional sem gerente.
+4. Admin aprova consultor.
+5. Admin aprova gerente.
+6. Admin aprova regional.
+7. Consultor envia previsão.
+8. Gerente vê consultor.
+9. Gerente edita consultor.
+10. Regional vê gerentes.
+11. Regional vê consultores.
+12. Regional edita consultor.
+13. Admin vê tudo.
+14. Sessão expira em 3h.
+15. Reset às 19h.
+16. PWA instala no celular.
+17. Nenhum secret aparece no frontend.
+
+======================================================================
+RESULTADO ESPERADO
+======================================================================
+
+Ao final das 20 etapas, o sistema deve estar funcional com:
+
+- Cadastro.
+- Aprovação.
+- Login.
+- Perfis.
+- Formulário do consultor.
+- Dashboard gerente.
+- Dashboard regional.
+- Dashboard admin.
+- Reset diário.
+- PWA.
+- Neon.
+- Prisma.
+- Sessão 3h.
+
+
+
+
+==========================================================================================
+06_REGRAS_DE_NEGOCIO_E_PERMISSOES.txt
+==========================================================================================
+# COMERCIALPRO — REGRAS DE NEGÓCIO E PERMISSÕES
+
+======================================================================
+1. REGRA CENTRAL
+======================================================================
+
+Cada pessoa acessa com seu próprio usuário e senha.
+
+Cada perfil enxerga apenas o que seu nível permite.
+
+O sistema é baseado em hierarquia:
+
+ADMIN
+  -> vê todos
+
+GERENTE_REGIONAL
+  -> vê gerentes
+  -> vê consultores dos gerentes
+  -> edita consultores da sua visão
+
+GERENTE
+  -> vê seus consultores
+  -> edita seus consultores
+
+CONSULTOR
+  -> vê apenas a própria previsão
+  -> edita apenas a própria previsão
+
+======================================================================
+2. REGRAS DO ADMIN
+======================================================================
+
+ADMIN pode:
+
+- Aprovar cadastro.
+- Rejeitar cadastro.
+- Definir perfil.
+- Definir vínculo.
+- Ver todos os usuários.
+- Ver todas as previsões.
+- Editar qualquer previsão.
+- Executar reset manual.
+- Consultar histórico, se implementado.
+
+ADMIN não deve:
+
+- Ter restrição de gerente.
+- Depender de aprovação por outro usuário.
+
+======================================================================
+3. REGRAS DO GERENTE REGIONAL
+======================================================================
+
+GERENTE_REGIONAL pode:
+
+- Ver gerentes.
+- Ver total por gerente.
+- Ver consultores de cada gerente.
+- Ver previsão dos consultores.
+- Editar previsão dos consultores visíveis.
+- Ver prévia total regional.
+
+GERENTE_REGIONAL não deve:
+
+- Aprovar cadastro.
+- Criar usuário diretamente.
+- Alterar perfil de usuário.
+- Ver tela admin.
+
+Observação MVP:
+- O gerente regional pode visualizar todos os gerentes aprovados.
+- Caso no futuro exista mais de um regional com times diferentes, usar regionalManagerId para limitar visão.
+
+======================================================================
+4. REGRAS DO GERENTE
+======================================================================
+
+GERENTE pode:
+
+- Ver consultores vinculados a ele.
+- Ver previsão dos seus consultores.
+- Editar previsão dos seus consultores.
+- Ver prévia total da equipe.
+
+GERENTE não pode:
+
+- Ver consultores de outro gerente.
+- Editar consultor de outro gerente.
+- Aprovar cadastro.
+- Alterar perfil.
+- Ver tela admin.
+- Ver tela regional.
+
+======================================================================
+5. REGRAS DO CONSULTOR
+======================================================================
+
+CONSULTOR pode:
+
+- Ver própria previsão.
+- Enviar própria previsão.
+- Atualizar própria previsão do dia operacional.
+- Marcar sem previsão.
+
+CONSULTOR não pode:
+
+- Ver outro consultor.
+- Ver gerente.
+- Ver regional.
+- Ver admin.
+- Editar previsão de outra pessoa.
+- Aprovar cadastro.
+
+======================================================================
+6. REGRAS DO CADASTRO
+======================================================================
+
+Quando uma pessoa se cadastra:
+
+- O status inicial é PENDING.
+- O perfil final ainda não está liberado.
+- A pessoa não pode acessar área interna.
+
+Se solicitou CONSULTOR:
+
+- Precisa escolher um gerente aprovado.
+- O admin pode validar ou trocar o gerente na aprovação.
+
+Se solicitou GERENTE:
+
+- Não precisa escolher gerente.
+- Admin aprova como gerente.
+
+Se solicitou GERENTE_REGIONAL:
+
+- Não precisa escolher gerente.
+- Admin aprova como gerente regional.
+
+======================================================================
+7. REGRAS DA PREVISÃO
+======================================================================
+
+A previsão possui:
+
+- Produção.
+- Seguro.
+- TC.
+- Sem previsão.
+
+Total da previsão:
+
+produção + seguro + TC
+
+Se "Sem previsão" estiver marcado:
+
+- Produção = 0.
+- Seguro = 0.
+- TC = 0.
+- Total = 0.
+- noForecast = true.
+
+Se houver qualquer valor positivo:
+
+- noForecast = false.
+
+======================================================================
+8. REGRAS DE TOTALIZAÇÃO
+======================================================================
+
+Total do consultor:
+
+- Soma da própria previsão do dia operacional.
+
+Total do gerente:
+
+- Soma da previsão dos consultores vinculados a ele.
+
+Total do gerente regional:
+
+- Soma dos totais dos gerentes visíveis.
+
+Total do admin:
+
+- Soma das previsões de todos os consultores aprovados.
+
+======================================================================
+9. REGRAS DE EDIÇÃO
+======================================================================
+
+Consultor:
+
+- Pode editar apenas sua própria previsão.
+
+Gerente:
+
+- Pode editar apenas consultores com managerId igual ao seu id.
+
+Gerente regional:
+
+- Pode editar consultores dentro da sua visão.
+- No MVP, a visão pode ser todos os gerentes aprovados.
+- Em versão futura, validar pelo regionalManagerId do gerente.
+
+Admin:
+
+- Pode editar qualquer previsão.
+
+Toda edição deve registrar:
+
+- updatedById.
+- updatedAt.
+
+======================================================================
+10. REGRA DO RESET
+======================================================================
+
+O reset acontece diariamente às 19h.
+
+Objetivo:
+
+- Zerar visualmente as previsões do ciclo seguinte.
+
+Não fazer:
+
+- Não deletar histórico.
+- Não apagar registros anteriores.
+- Não sobrescrever previsão antiga.
+
+Fazer:
+
+- Usar operationalDate.
+- Após 19h, a operationalDate muda para a próxima data.
+- Como não existem previsões para a nova operationalDate, os valores aparecem zerados.
+- Registrar ResetLog.
+
+======================================================================
+11. REGRA DE DATA OPERACIONAL
+======================================================================
+
+A data operacional é a data usada para as previsões.
+
+Exemplo:
+
+Dia 08/07/2026 antes das 19h:
+- operationalDate = 08/07/2026
+
+Dia 08/07/2026 depois das 19h:
+- operationalDate = 09/07/2026
+
+Isso permite que a equipe comece a lançar previsão do próximo ciclo após 19h.
+
+======================================================================
+12. REGRAS DE STATUS
+======================================================================
+
+UserStatus:
+
+PENDING:
+- Cadastro enviado.
+- Aguardando admin.
+- Sem acesso operacional.
+
+APPROVED:
+- Cadastro aprovado.
+- Usuário pode acessar.
+
+REJECTED:
+- Cadastro rejeitado.
+- Usuário não pode acessar.
+
+======================================================================
+13. PERMISSÕES POR ROTA
+======================================================================
+
+/login
+- Público.
+
+/cadastro
+- Público.
+
+/aguardando-aprovacao
+- Público ou usuário pendente.
+
+/admin
+- Apenas ADMIN.
+
+/consultor
+- Apenas CONSULTANT.
+
+/gerente
+- Apenas MANAGER.
+
+/regional
+- Apenas REGIONAL_MANAGER.
+
+APIs admin:
+- Apenas ADMIN.
+
+APIs de previsão:
+- CONSULTANT, MANAGER, REGIONAL_MANAGER ou ADMIN conforme ação.
+
+API cron:
+- Apenas chamada autorizada com CRON_SECRET.
+
+
+
+
+==========================================================================================
+07_INSTRUCOES_PERMANENTES_CODEX_CLAUDE.txt
+==========================================================================================
+# COMERCIALPRO — INSTRUÇÕES PERMANENTES PARA CODEX / CLAUDE
+
+Este arquivo deve ser lido antes de qualquer alteração no projeto.
+
+======================================================================
+1. OBJETIVO DO PROJETO
+======================================================================
+
+Construir uma aplicação web leve, moderna, mobile-first e instalável como PWA, para controle diário de previsão de pagamento por consultores, gerentes e gerente regional.
+
+A aplicação deve ser simples, mas bem estruturada.
+
+Não criar complexidade desnecessária.
+
+======================================================================
+2. ORDEM DE ANÁLISE
+======================================================================
+
+Antes de codificar, sempre analisar:
+
+1. docs/00_CONTEXTUALIZACAO_GERAL_Codex_Claude.txt
+2. docs/01_REQUISITOS_FUNCIONAIS.txt
+3. docs/02_REQUISITOS_NAO_FUNCIONAIS.txt
+4. docs/03_STACK_E_ARQUITETURA.txt
+5. docs/04_MODELAGEM_BANCO_PRISMA.txt
+6. docs/05_PLANO_CODIFICACAO_20_ETAPAS.txt
+7. docs/06_REGRAS_DE_NEGOCIO_E_PERMISSOES.txt
+8. Este arquivo.
+
+======================================================================
+3. DIRETRIZES DE CODIFICAÇÃO
+======================================================================
+
+Sempre:
+
+- Trabalhar em etapas pequenas.
+- Explicar o que será alterado.
+- Evitar quebrar fluxo existente.
+- Criar componentes reutilizáveis.
+- Separar regra de negócio da interface.
+- Validar permissão no servidor.
+- Usar TypeScript corretamente.
+- Usar nomes claros.
+- Evitar gambiarras.
+- Evitar duplicação de código.
+- Manter estrutura simples.
+
+Nunca:
+
+- Expor DATABASE_URL.
+- Expor senha do banco.
+- Expor API key.
+- Usar NEXT_PUBLIC em secret privado.
+- Salvar senha pura.
+- Enviar passwordHash para o frontend.
+- Deixar gerente acessar consultor de outro gerente.
+- Deixar consultor acessar dados de outros.
+- Deixar usuário pendente acessar dashboard.
+- Apagar histórico no reset.
+- Criar dependências pesadas sem necessidade.
+- Criar arquitetura exagerada.
+
+======================================================================
+4. PADRÃO DE RESPOSTA AO IMPLEMENTAR
+======================================================================
+
+Quando for implementar uma etapa, responder com:
+
+1. Arquivos que serão criados/alterados.
+2. Objetivo da alteração.
+3. Código.
+4. Como testar.
+5. Riscos ou pontos de atenção.
+
+======================================================================
+5. PADRÃO VISUAL
+======================================================================
+
+O visual deve ser:
+
+- Clean.
+- Moderno.
+- Leve.
+- Mobile-first.
+- Com aparência de app.
+- Com cards.
+- Com botões grandes.
+- Com boa leitura em celular.
+
+Evitar:
+
+- Tabelas em telas pequenas.
+- Menus complexos.
+- Excesso de texto.
+- Excesso de cores.
+- Layout poluído.
+
+Preferir:
+
+- Cards.
+- Listas.
+- Modal simples.
+- Indicadores de total.
+- Destaque para "Prévia total".
+
+======================================================================
+6. PADRÃO DE DADOS FINANCEIROS
+======================================================================
+
+Todos os valores devem ser tratados como Decimal no banco.
+
+Campos:
+
+- productionValue.
+- insuranceValue.
+- tcValue.
+
+Exibição:
+
+- Formatar como moeda brasileira.
+- Exemplo: R$ 1.250,00
+
+Entrada:
+
+- Aceitar digitação simples.
+- Normalizar no backend.
+- Nunca confiar apenas no frontend.
+
+======================================================================
+7. PADRÃO DE AUTORIZAÇÃO
+======================================================================
+
+Permissões obrigatórias:
+
+ADMIN:
+- Tudo.
+
+REGIONAL_MANAGER:
+- Gerentes e consultores visíveis.
+
+MANAGER:
+- Apenas consultores vinculados.
+
+CONSULTANT:
+- Apenas a própria previsão.
+
+Toda operação sensível deve validar:
+
+- Usuário logado.
+- Status APPROVED.
+- Role correta.
+- Vínculo correto.
+
+======================================================================
+8. PADRÃO DE RESET
+======================================================================
+
+O reset diário às 19h deve funcionar pela data operacional.
+
+Não apagar dados.
+
+Fluxo recomendado:
+
+- getOperationalDate() retorna a data correta do ciclo.
+- Antes das 19h, retorna data atual.
+- Depois das 19h, retorna próxima data.
+- Como nova data não tem previsões, os totais aparecem zerados.
+- ResetLog registra execução.
+
+A rota cron deve ser protegida por CRON_SECRET.
+
+======================================================================
+9. PADRÃO DE SESSÃO
+======================================================================
+
+Sessão:
+
+- Expira em 3 horas.
+- Cookie HTTP-only.
+- Token aleatório.
+- Token salvo com hash no banco.
+- expiresAt controlado no banco.
+
+Ao validar:
+
+- Se não existe sessão, bloquear.
+- Se expirou, bloquear.
+- Se revokedAt existe, bloquear.
+- Se usuário não está APPROVED, bloquear.
+
+======================================================================
+10. PADRÃO DE COMPONENTES
+======================================================================
+
+Criar componentes reaproveitáveis:
+
+- Button.
+- Input.
+- MoneyInput.
+- Card.
+- Badge.
+- Modal.
+- AppShell.
+- ForecastForm.
+- ForecastSummaryCard.
+- ConsultantCard.
+- ManagerCard.
+- PendingUserCard.
+
+Não repetir formulário em várias telas.
+
+======================================================================
+11. PADRÃO DE SERVICES
+======================================================================
+
+Regras de negócio devem ficar em services.
+
+Exemplo:
+
+forecast.service.ts:
+- upsertForecast
+- getManagerSummary
+- getRegionalSummary
+- updateForecastAsManager
+- updateForecastAsRegional
+- updateForecastAsAdmin
+
+approval.service.ts:
+- approveUser
+- rejectUser
+- listPendingUsers
+
+auth.service.ts:
+- login
+- logout
+- validateSession
+
+reset.service.ts:
+- runDailyReset
+- hasResetRunToday
+
+======================================================================
+12. TESTES MANUAIS OBRIGATÓRIOS
+======================================================================
+
+Antes de considerar pronto, testar:
+
+1. Admin faz login.
+2. Consultor solicita cadastro escolhendo gerente.
+3. Gerente solicita cadastro sem escolher gerente.
+4. Regional solicita cadastro sem escolher gerente.
+5. Admin aprova consultor.
+6. Admin aprova gerente.
+7. Admin aprova regional.
+8. Consultor envia previsão.
+9. Gerente vê consultor.
+10. Gerente edita consultor.
+11. Gerente não vê consultor de outro gerente.
+12. Regional vê gerentes.
+13. Regional clica no gerente.
+14. Regional edita consultor.
+15. Admin vê todos.
+16. Sessão expira.
+17. Reset muda data operacional.
+18. PWA instala na tela inicial.
+19. Nenhum secret aparece no frontend.
+20. Build final passa sem erro.
+
+======================================================================
+13. COMPORTAMENTO ESPERADO DO CODEX/CLAUDE
+======================================================================
+
+Ao receber uma tarefa:
+
+- Ler contexto.
+- Identificar etapa.
+- Não sair criando funcionalidades extras.
+- Não alterar regra de negócio sem necessidade.
+- Não remover segurança mínima.
+- Não trocar stack sem pedir.
+- Não transformar o projeto em algo pesado.
+- Priorizar simplicidade e funcionamento.
+- Manter compatibilidade com Neon.
+- Manter foco mobile-first.
+
+======================================================================
+14. FRASE-CHAVE DO PROJETO
+======================================================================
+
+"ComercialPro deve ser um sistema simples, leve e moderno para previsão diária de pagamentos, com hierarquia clara entre consultor, gerente, gerente regional e admin."
+
+
+
+
+==========================================================================================
+08_CHECKLIST_FINAL_DO_MVP.txt
+==========================================================================================
+# COMERCIALPRO — CHECKLIST FINAL DO MVP
+
+Use este checklist antes de considerar a primeira versão pronta.
+
+======================================================================
+1. PROJETO
+======================================================================
+
+[ ] Projeto Next.js criado.
+[ ] TypeScript ativo.
+[ ] Tailwind ativo.
+[ ] App Router ativo.
+[ ] Estrutura src organizada.
+[ ] Pasta docs criada.
+[ ] README básico criado.
+
+======================================================================
+2. BANCO
+======================================================================
+
+[ ] Neon configurado.
+[ ] DATABASE_URL no .env.
+[ ] Prisma instalado.
+[ ] schema.prisma criado.
+[ ] Migration executada.
+[ ] Seed do admin funcionando.
+
+======================================================================
+3. SEGREDOS
+======================================================================
+
+[ ] DATABASE_URL não aparece no frontend.
+[ ] Nenhum secret usa NEXT_PUBLIC.
+[ ] .env não foi commitado.
+[ ] .env.example criado.
+[ ] passwordHash não retorna para frontend.
+[ ] Logs não mostram senha ou token.
+
+======================================================================
+4. LOGIN E SESSÃO
+======================================================================
+
+[ ] Login funciona.
+[ ] Logout funciona.
+[ ] Senha com hash.
+[ ] Cookie HTTP-only.
+[ ] Sessão expira em 3 horas.
+[ ] Usuário pendente não acessa.
+[ ] Usuário rejeitado não acessa.
+[ ] Redirecionamento por perfil funciona.
+
+======================================================================
+5. CADASTRO
+======================================================================
+
+[ ] Tela de cadastro existe.
+[ ] Nome completo obrigatório.
+[ ] Usuário obrigatório.
+[ ] Senha obrigatória.
+[ ] Tipo de solicitação obrigatório.
+[ ] Consultor escolhe gerente.
+[ ] Gerente não escolhe gerente.
+[ ] Regional não escolhe gerente.
+[ ] Cadastro nasce PENDING.
+
+======================================================================
+6. ADMIN
+======================================================================
+
+[ ] Admin vê cadastros pendentes.
+[ ] Admin aprova usuário.
+[ ] Admin rejeita usuário.
+[ ] Admin define perfil.
+[ ] Admin vincula consultor a gerente.
+[ ] Admin vê usuários aprovados.
+[ ] Admin vê previsões.
+[ ] Admin vê total geral.
+
+======================================================================
+7. CONSULTOR
+======================================================================
+
+[ ] Consultor acessa dashboard própria.
+[ ] Consultor vê boas-vindas.
+[ ] Consultor informa produção.
+[ ] Consultor informa seguro.
+[ ] Consultor informa TC.
+[ ] Consultor marca sem previsão.
+[ ] Consultor envia previsão.
+[ ] Consultor só vê a própria previsão.
+
+======================================================================
+8. GERENTE
+======================================================================
+
+[ ] Gerente acessa dashboard própria.
+[ ] Gerente vê boas-vindas.
+[ ] Gerente vê prévia total.
+[ ] Gerente vê consultores vinculados.
+[ ] Gerente não vê consultores de outro gerente.
+[ ] Gerente edita consultor vinculado.
+[ ] Total do gerente atualiza.
+
+======================================================================
+9. GERENTE REGIONAL
+======================================================================
+
+[ ] Regional acessa dashboard própria.
+[ ] Regional vê boas-vindas.
+[ ] Regional vê prévia total.
+[ ] Regional vê gerentes.
+[ ] Regional clica em gerente.
+[ ] Regional vê consultores do gerente.
+[ ] Regional edita consultor.
+[ ] Total regional atualiza.
+
+======================================================================
+10. RESET
+======================================================================
+
+[ ] getOperationalDate implementado.
+[ ] Após 19h, data operacional muda.
+[ ] Totais aparecem zerados no novo ciclo.
+[ ] Histórico não é apagado.
+[ ] ResetLog registra execução.
+[ ] Rota cron protegida.
+[ ] Cron configurado.
+
+======================================================================
+11. PWA
+======================================================================
+
+[ ] Manifest criado.
+[ ] Ícones criados.
+[ ] display standalone.
+[ ] App instala no celular.
+[ ] App abre sem aparência de navegador, quando possível.
+[ ] Layout funciona em celular.
+
+======================================================================
+12. BUILD
+======================================================================
+
+[ ] npm run lint passa.
+[ ] npm run build passa.
+[ ] Prisma generate executa.
+[ ] Deploy conecta no Neon.
+[ ] Login admin funciona em produção.
+[ ] Cron funciona em produção.
+
+======================================================================
+13. RESULTADO ESPERADO
+======================================================================
+
+O MVP está pronto quando:
+
+- Usuário se cadastra.
+- Admin aprova.
+- Consultor lança previsão.
+- Gerente acompanha equipe.
+- Regional acompanha gerentes.
+- Admin acompanha tudo.
+- Reset às 19h funciona.
+- App pode ser salvo na tela inicial do celular.
+
+
+
+
+==========================================================================================
+README_ORDEM_DE_LEITURA.txt
+==========================================================================================
+# COMERCIALPRO — ORDEM DE LEITURA DA DOCUMENTAÇÃO
+
+Coloque esta pasta dentro do projeto:
+
+comercialpro/docs
+
+Ordem recomendada para Codex/Claude:
+
+1. 00_CONTEXTUALIZACAO_GERAL_Codex_Claude.txt
+2. 01_REQUISITOS_FUNCIONAIS.txt
+3. 02_REQUISITOS_NAO_FUNCIONAIS.txt
+4. 03_STACK_E_ARQUITETURA.txt
+5. 04_MODELAGEM_BANCO_PRISMA.txt
+6. 05_PLANO_CODIFICACAO_20_ETAPAS.txt
+7. 06_REGRAS_DE_NEGOCIO_E_PERMISSOES.txt
+8. 07_INSTRUCOES_PERMANENTES_CODEX_CLAUDE.txt
+9. 08_CHECKLIST_FINAL_DO_MVP.txt
+
+Sempre que for pedir algo para Codex ou Claude, informe:
+
+"Leia primeiro a pasta docs do projeto ComercialPro e siga as regras documentadas antes de codificar."
+
+
+

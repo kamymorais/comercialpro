@@ -1,0 +1,282 @@
+# COMERCIALPRO — CONTEXTO GERAL DO PROJETO
+
+Projeto: ComercialPro
+Tipo: Aplicação web leve, modular e instalável na tela inicial do celular como PWA.
+Objetivo principal: registrar e acompanhar previsões diárias de pagamento/produção por consultores, gerentes e gerente regional.
+
+Este documento deve ser lido antes de qualquer codificação por Codex, Claude ou qualquer outro agente de IA.
+
+======================================================================
+1. VISÃO GERAL
+======================================================================
+
+O ComercialPro será uma aplicação web simples, leve, moderna e bem organizada, pensada para uso diário por equipe comercial.
+
+A aplicação precisa funcionar bem no celular, com visual limpo, moderno, rápido e sem excesso de elementos.
+
+A ideia é que o usuário acesse pelo navegador e salve o sistema na tela inicial do celular, funcionando como app instalado. Portanto, o projeto deve ser preparado como PWA.
+
+A aplicação terá:
+
+- Tela de cadastro.
+- Tela de login.
+- Aprovação de cadastros pelo administrador.
+- Perfis com níveis diferentes de acesso.
+- Registro diário de previsão de pagamento.
+- Visualização hierárquica por consultor, gerente e gerente regional.
+- Reset automático diário às 19h, zerando a prévia do dia operacional.
+- Banco Neon/PostgreSQL.
+- Stack simples, preferencialmente usando Next.js fullstack.
+
+======================================================================
+2. PERFIS DO SISTEMA
+======================================================================
+
+O sistema terá quatro tipos principais de usuário:
+
+1. ADMIN
+   - Aprova todos os cadastros.
+   - Define o perfil de cada usuário.
+   - Define vínculo entre consultor e gerente.
+   - Pode visualizar tudo.
+   - Pode editar tudo.
+   - Pode executar reset manual, se necessário.
+
+2. GERENTE_REGIONAL
+   - Tem visão dos gerentes.
+   - Pode clicar em um gerente e visualizar os consultores daquele gerente.
+   - Pode clicar em um consultor e editar a previsão dele.
+   - Visualiza a prévia total geral da sua visão.
+
+3. GERENTE
+   - Visualiza apenas os consultores atrelados a ele.
+   - Visualiza a prévia total da sua equipe.
+   - Pode clicar em um consultor e editar os valores dele.
+   - Não visualiza consultores de outros gerentes.
+
+4. CONSULTOR
+   - Visualiza apenas sua própria tela de formulário.
+   - Preenche diariamente:
+     - Valor da produção.
+     - Valor do seguro.
+     - Valor da TC.
+     - Ou marca como "Sem previsão".
+   - Envia sua previsão do dia.
+
+======================================================================
+3. FLUXO DE CADASTRO
+======================================================================
+
+A tela de cadastro deve solicitar:
+
+- Nome completo.
+- Usuário de acesso.
+- Senha.
+- Tipo de solicitação:
+  - Consultor.
+  - Gerente.
+  - Gerente regional.
+- Campo de seleção de gerente, somente quando o usuário escolher "Consultor".
+
+Regra importante:
+
+- Se o usuário estiver se cadastrando como CONSULTOR, ele precisa escolher um gerente.
+- A lista de gerentes deve puxar apenas gerentes já aprovados pelo ADMIN.
+- Se o usuário estiver se cadastrando como GERENTE, ele não precisa escolher gerente.
+- Se o usuário estiver se cadastrando como GERENTE_REGIONAL, ele também não precisa escolher gerente.
+- Mesmo escolhendo o tipo de solicitação no cadastro, o usuário NÃO define seu próprio perfil final. O ADMIN define na aprovação.
+- Todo cadastro novo deve nascer com status PENDENTE.
+- O usuário só pode acessar o sistema depois de aprovado pelo ADMIN.
+
+======================================================================
+4. FLUXO DE APROVAÇÃO
+======================================================================
+
+O ADMIN terá uma tela para ver cadastros pendentes.
+
+Para cada cadastro, o ADMIN poderá:
+
+- Aprovar.
+- Rejeitar.
+- Definir o perfil final:
+  - CONSULTOR.
+  - GERENTE.
+  - GERENTE_REGIONAL.
+- Se for CONSULTOR, validar ou alterar o gerente vinculado.
+- Se for GERENTE, aprovar sem necessidade de gerente.
+- Se for GERENTE_REGIONAL, aprovar sem necessidade de gerente.
+
+Regras:
+
+- Apenas ADMIN aprova cadastro.
+- Usuário pendente não pode usar o sistema.
+- Usuário rejeitado não pode usar o sistema.
+- Usuário aprovado pode acessar conforme seu perfil.
+
+======================================================================
+5. FUNCIONALIDADE PRINCIPAL
+======================================================================
+
+A funcionalidade principal é a previsão de pagamento do dia.
+
+O CONSULTOR informa diariamente:
+
+- Valor da produção.
+- Valor do seguro.
+- Valor da TC.
+- Ou marca "Sem previsão".
+
+O GERENTE visualiza:
+
+- Todos os consultores vinculados a ele.
+- Valor da produção de cada consultor.
+- Valor do seguro de cada consultor.
+- Valor da TC de cada consultor.
+- Status "Sem previsão", quando marcado.
+- Total da equipe.
+
+O GERENTE_REGIONAL visualiza:
+
+- Lista de gerentes.
+- Total por gerente.
+- Ao clicar em um gerente, visualiza os consultores dele.
+- Ao clicar em um consultor, pode editar os valores.
+- Total geral da visão regional.
+
+O ADMIN visualiza:
+
+- Tudo.
+- Usuários.
+- Cadastros.
+- Previsões.
+- Totais por gerente.
+- Totais por gerente regional.
+- Total geral.
+
+======================================================================
+6. RESET DIÁRIO
+======================================================================
+
+Todo dia, às 19h no horário de Brasília/São Paulo, o sistema deve zerar os valores ativos dos consultores.
+
+O objetivo do reset:
+
+- A previsão do dia seguinte deve começar zerada.
+- Os totais dos gerentes devem zerar.
+- Os totais do gerente regional devem zerar.
+- O ADMIN deve ver os valores zerados para o próximo ciclo.
+
+Recomendação técnica:
+
+- Não apagar o histórico.
+- Criar registros por data.
+- Quando virar o ciclo operacional, a tela deve buscar a previsão da data operacional atual.
+- O reset pode criar registros vazios para o novo dia ou simplesmente fazer a busca retornar zero se não houver previsão para o dia.
+
+Importante:
+
+- Manter histórico é melhor do que apagar.
+- Se o gerente ou admin quiser consultar dias anteriores no futuro, os dados estarão preservados.
+- A operação de reset precisa ser idempotente: se rodar duas vezes no mesmo dia, não pode duplicar nem corromper dados.
+
+======================================================================
+7. SESSÃO E LOGIN
+======================================================================
+
+O login será simples.
+
+Regras:
+
+- Usuário acessa com usuário e senha.
+- Sessão deve expirar após 3 horas.
+- Ao expirar, o usuário volta para o login.
+- Usar cookie HTTP-only.
+- Não expor token em localStorage.
+- Não expor dados sensíveis no frontend.
+- Senha deve ser armazenada com hash simples, mesmo em ambiente de teste.
+
+Observação:
+
+Mesmo o projeto sendo simples, não colocar senha pura no banco. Usar bcrypt ou argon2 evita problema básico e não aumenta complexidade relevante.
+
+======================================================================
+8. PRINCÍPIOS DO PROJETO
+======================================================================
+
+A aplicação deve ser:
+
+- Simples.
+- Leve.
+- Modular.
+- Mobile-first.
+- Bonita.
+- Moderna.
+- Rápida.
+- Fácil de manter.
+- Fácil de evoluir.
+- Sem excesso de autenticação complexa.
+- Sem dependências desnecessárias.
+- Sem backend separado no MVP, se Next.js fullstack for suficiente.
+
+======================================================================
+9. O QUE NÃO FAZER
+======================================================================
+
+Não fazer:
+
+- Não expor DATABASE_URL no frontend.
+- Não usar NEXT_PUBLIC para chaves privadas.
+- Não colocar senha do banco no código.
+- Não criar backend separado sem necessidade.
+- Não criar arquitetura exagerada.
+- Não criar telas poluídas.
+- Não criar regras fora do que foi pedido.
+- Não permitir consultor ver outros consultores.
+- Não permitir gerente ver consultores de outro gerente.
+- Não permitir usuário pendente acessar o sistema.
+- Não apagar histórico no reset.
+- Não depender de planilha externa.
+- Não usar autenticação social no MVP.
+- Não usar pagamento no MVP.
+- Não adicionar funcionalidades complexas sem necessidade.
+
+======================================================================
+10. NOMES INTERNOS RECOMENDADOS
+======================================================================
+
+Nome do projeto:
+- ComercialPro
+
+Nome da aplicação:
+- ComercialPro
+- Previsão Comercial
+- Prévia de Pagamentos
+
+Nome técnico das rotas sugeridas:
+- /login
+- /cadastro
+- /aguardando-aprovacao
+- /admin
+- /admin/cadastros
+- /admin/usuarios
+- /admin/previsoes
+- /consultor
+- /gerente
+- /regional
+
+======================================================================
+11. DIRETRIZ PARA IA
+======================================================================
+
+Ao codificar este projeto:
+
+1. Antes de alterar qualquer arquivo, analisar a estrutura atual.
+2. Não quebrar o que já estiver funcionando.
+3. Implementar em etapas pequenas.
+4. Criar componentes reutilizáveis.
+5. Manter regras no backend/server-side.
+6. Não confiar em dados vindos do frontend.
+7. Validar perfil do usuário em cada ação protegida.
+8. Evitar expor dados de outros perfis.
+9. Manter código simples e legível.
+10. Documentar decisões importantes dentro da pasta docs.

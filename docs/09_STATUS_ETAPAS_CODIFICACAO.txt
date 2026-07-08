@@ -1,0 +1,64 @@
+﻿# COMERCIALPRO - STATUS DAS ETAPAS DE CODIFICACAO
+
+Legenda:
+[ ] Pendente
+[~] Em andamento
+[x] Concluida
+[!] Atencao / precisa revisao
+
+01. [x] Criacao do projeto base
+02. [x] Configuracao inicial do layout
+03. [x] Configuracao do banco Neon e Prisma
+04. [x] Modelagem Prisma
+05. [x] Seed do Admin
+06. [x] Utilitarios base
+07. [x] Tela de login
+08. [x] Middleware de protecao
+09. [x] Tela de cadastro
+10. [x] Tela de aguardando aprovacao
+11. [x] Painel Admin base
+12. [x] Aprovacao de cadastros
+13. [x] Dashboard Consultor
+14. [x] Dashboard Gerente
+15. [x] Edicao de consultor pelo gerente
+16. [x] Dashboard Gerente Regional
+17. [x] Edicao de consultor pelo regional
+18. [x] Painel de previsoes do Admin
+19. [x] Reset diario as 19h
+20. [~] PWA, testes e refinamento final
+
+Historico:
+- 2026-07-08 16:05:16 -03:00 - Etapa 01 iniciada: criacao do projeto base Next.js com TypeScript, App Router, Tailwind CSS, ESLint e estrutura /src.
+- 2026-07-08 16:18:58 -03:00 - Etapa 01 concluida: projeto base criado com Next.js, TypeScript, App Router, Tailwind CSS, ESLint, estrutura /src e pagina inicial provisoria do ComercialPro. Validacoes npm run lint e npm run build executadas com sucesso.
+- 2026-07-08 16:33:12 -03:00 - Etapa 02 iniciada: configuracao inicial do layout e componentes visuais reutilizaveis.
+- 2026-07-08 16:36:29 -03:00 - Etapa 02 concluida: criados componentes visuais reutilizaveis, utilitarios base de classe e moeda, layout inicial mobile-first e home provisoria usando os componentes. Validacoes npm run lint e npm run build executadas com sucesso.
+- 2026-07-08 16:40:34 -03:00 - Etapa 03 iniciada: configuracao inicial do Prisma e preparacao segura para Neon PostgreSQL.
+- 2026-07-08 16:48:28 -03:00 - Etapa 03 concluida: Prisma e Prisma Client instalados, schema minimo criado sem models, prisma.config.ts ajustado para Prisma 7, singleton server-side criado em src/lib/prisma.ts, .env.example criado sem secrets reais e .gitignore ajustado para proteger arquivos .env. Validacoes npx prisma validate, npx prisma generate, npm run lint e npm run build executadas com sucesso.
+- 2026-07-08 16:51:38 -03:00 - Etapa 04 iniciada: modelagem Prisma com enums e models principais.
+- 2026-07-08 16:55:21 -03:00 - Etapa 04 em atencao: schema Prisma modelado, formatado, validado, Prisma Client gerado, lint e build executados com sucesso. Migration npx prisma migrate dev --name init_models nao foi executada porque nao existe DATABASE_URL real em .env local.
+- 2026-07-08 17:08:39 -03:00 - Etapa 04 concluida: migration init_models localizada e status do Prisma confirmou banco atualizado.
+- 2026-07-08 17:08:39 -03:00 - Etapa 05 iniciada: criacao do seed idempotente do usuario ADMIN inicial.
+- 2026-07-08 17:12:43 -03:00 - Etapa 05 em atencao: seed idempotente criado, bcryptjs e tsx configurados, .env.example e comandos de seed ajustados. Validacoes npx prisma validate, npx prisma generate, npm run lint e npm run build passaram. npx prisma db seed nao concluiu porque ADMIN_PASSWORD nao esta definido no .env local.
+- 2026-07-08 17:19:12 -03:00 - Etapa 05 concluida: seed do ADMIN executado com sucesso e validado como idempotente.
+- 2026-07-08 17:19:12 -03:00 - Etapa 06 iniciada: criacao dos utilitarios base de senha, sessao, autenticacao, permissoes, datas, moeda, validacao e constantes.
+- 2026-07-08 17:22:41 -03:00 - Etapa 06 concluida: utilitarios base criados para constantes, senha, sessao, autenticacao, permissoes, datas, moeda e validacao. Validacoes npx prisma validate, npx prisma generate, npm run lint e npm run build executadas com sucesso.
+- 2026-07-08 17:30:47 -03:00 - Etapa 07 concluida: tela /login criada, autenticacao server-side implementada com validacao de senha, criacao de sessao no banco, cookie HTTP-only, redirecionamento por perfil, logout basico e placeholders minimos de destino. Validacoes npx prisma validate, npx prisma generate, npm run lint e npm run build executadas com sucesso.
+- 2026-07-08 17:25:53 -03:00 - Etapa 07 iniciada: criacao da tela de login e fluxo inicial de autenticacao com sessao HTTP-only.
+- 2026-07-08 17:35:24 -03:00 - Etapa 08 iniciada: protecao de rotas com middleware leve e validacao server-side de sessao e perfil.
+- 2026-07-08 17:41:59 -03:00 - Etapa 08 concluida: middleware leve criado para rotas protegidas, validacao server-side de sessao e perfil adicionada, pagina aguardando aprovacao criada e placeholders protegidos passaram a validar role. Validacoes npx prisma validate, npx prisma generate, npm run lint e npm run build executadas com sucesso; /admin sem cookie redirecionou para /login.
+
+- 2026-07-08 17:46:12 -03:00 - Etapa 09 iniciada: criacao da tela real de cadastro com usuario pendente e selecao de gerente para consultores.
+- 2026-07-08 17:53:29 -03:00 - Etapa 09 concluida: tela /cadastro criada com validacao server-side, hash de senha, username normalizado, usuario pendente, perfil solicitado e gerente obrigatorio para consultores.
+- 2026-07-08 17:53:29 -03:00 - Etapa 10 concluida: tela /aguardando-aprovacao revisada com mensagem de cadastro em analise, orientacao de acesso pelo login e botao para /login.
+- 2026-07-08 17:53:29 -03:00 - Etapa 11 concluida: painel /admin criado com protecao ADMIN, boas-vindas, contadores, total de previsao do dia e atalhos para cadastros, usuarios e previsoes.
+- 2026-07-08 17:53:29 -03:00 - Etapa 12 concluida: fluxo /admin/cadastros criado para listar pendentes, aprovar com perfil final e gerente de consultor, ou rejeitar cadastros.
+- 2026-07-08 17:53:29 -03:00 - Etapa 13 concluida: dashboard /consultor criado com previsao da data operacional, upsert de DailyForecast, envio sem previsao e mensagem de sucesso.
+- 2026-07-08 17:53:29 -03:00 - Etapa 14 concluida: dashboard /gerente criado com total da equipe, previsao de pagamentos e lista de consultores com status WITH_FORECAST, NO_FORECAST ou NOT_SENT. Validacoes npx prisma validate, npx prisma generate, npm run lint e npm run build executadas com sucesso.
+
+- 2026-07-08 18:05:00 -03:00 - Etapas 15 a 19 iniciadas em conjunto: leitura obrigatoria de toda a pasta docs concluida e checklist revisado (etapas 01-14 confirmadas [x] concluidas, sem pendencias sem justificativa).
+- 2026-07-08 18:40:00 -03:00 - Etapa 15 concluida: adicionada updateConsultantForecastByManager e getManagerConsultantForEdit em forecast.service.ts com validacao server-side de vinculo managerId/role/status; criada pagina /gerente/consultores/[consultorId] com formulario reutilizavel ForecastEditForm, action updateManagerConsultantForecastAction em src/app/gerente/actions.ts e link de edicao nos cards de /gerente. ForecastCard e ConsultantForecastList generalizados (campo id, href opcional) para reuso nas etapas seguintes.
+- 2026-07-08 19:05:00 -03:00 - Etapa 16 concluida: dashboard /regional reescrita com previa total regional, contagem de gerentes e lista de gerentes aprovados (sem filtro por regionalManagerId, conforme regra MVP); criada pagina /regional/gerentes/[managerId] com detalhamento dos consultores do gerente. Adicionadas getRegionalForecastSummary e getRegionalManagerDetails em forecast.service.ts e componente ManagerForecastList. Ajustada canRegionalAccessManager em permissions.ts para tratar regionalManagerId nulo como visivel (regra MVP), alinhando com canRegionalAccessConsultant ja existente.
+- 2026-07-08 19:30:00 -03:00 - Etapa 17 concluida: adicionada updateConsultantForecastByRegional e getRegionalConsultantForEdit em forecast.service.ts validando consultor aprovado, gerente aprovado e visibilidade regional (canRegionalAccessConsultant); criada pagina /regional/consultores/[consultorId] e action updateRegionalConsultantForecastAction em src/app/regional/actions.ts, com redirecionamento de volta para /regional/gerentes/[managerId] apos salvar.
+- 2026-07-08 20:00:00 -03:00 - Etapa 18 concluida: criada getAdminForecastPanel (totais gerais, totais por gerente e lista de consultores com status, com filtros opcionais por gerente e por status) e updateConsultantForecastByAdmin em forecast.service.ts; pagina /admin/previsoes reescrita com filtros via formulario GET (gerente/status), lista de gerentes clicavel (ManagerForecastList reaproveitado) e lista de consultores com link de edicao; criada pagina /admin/previsoes/consultores/[consultorId] e action updateAdminConsultantForecastAction em src/app/admin/previsoes/actions.ts.
+- 2026-07-08 20:20:00 -03:00 - Etapa 19 concluida: criado src/services/reset.service.ts com runDailyReset (idempotente via ResetLog unico por operationalDate, retorna SUCCESS ou SKIPPED); criada rota GET /api/cron/reset-daily protegida por CRON_SECRET (header Authorization Bearer ou query param secret), retornando 500 se CRON_SECRET nao estiver configurado e 401 se o token nao conferir; criado vercel.json com cron diario as 22h UTC (19h America/Sao_Paulo); confirmado que todas as telas (/consultor, /gerente, /regional, /admin/previsoes) usam getOperationalDate() via services, nunca new Date() direto.
+- 2026-07-08 20:30:00 -03:00 - Validacoes finais das Etapas 15-19: npx prisma validate OK, npx prisma generate OK, npm run lint OK (0 erros, 0 warnings apos ajuste), npm run build OK com todas as rotas novas geradas (/gerente/consultores/[consultorId], /regional/gerentes/[managerId], /regional/consultores/[consultorId], /admin/previsoes/consultores/[consultorId], /api/cron/reset-daily). Teste manual da rota cron local: sem CRON_SECRET configurado no .env local a rota responde 500 "CRON_SECRET nao configurado" (comportamento seguro); teste completo de secret correto/incorreto e SUCCESS/SKIPPED nao pode ser validado neste ambiente pois ja havia um servidor de desenvolvimento do usuario ativo na porta 3000 usando o .env local (CRON_SECRET vazio) e nao foi encerrado por seguranca.

@@ -1,0 +1,333 @@
+# COMERCIALPRO — STACK E ARQUITETURA RECOMENDADA
+
+======================================================================
+1. STACK PRINCIPAL
+======================================================================
+
+Recomendação para o MVP:
+
+- Next.js
+- TypeScript
+- App Router
+- Tailwind CSS
+- Prisma ORM
+- Neon PostgreSQL
+- PWA
+- Cookie HTTP-only para sessão
+- bcrypt ou argon2 para hash de senha
+
+======================================================================
+2. POR QUE NEXT.JS FULLSTACK
+======================================================================
+
+O projeto precisa ser simples e barato.
+
+Next.js fullstack permite ter no mesmo projeto:
+
+- Frontend.
+- Backend.
+- Rotas de API.
+- Server actions.
+- Renderização server-side.
+- Integração direta com Prisma.
+- PWA.
+- Deploy simples.
+
+Isso evita criar:
+
+- Backend separado em Nest.
+- API separada.
+- Mais de um serviço.
+- Mais custo.
+- Mais configuração.
+
+======================================================================
+3. BANCO DE DADOS
+======================================================================
+
+Banco recomendado:
+
+- Neon PostgreSQL.
+
+Motivos:
+
+- Barato.
+- PostgreSQL real.
+- Combina com Prisma.
+- Bom para projetos pequenos e médios.
+- Permite evoluir sem trocar stack.
+
+======================================================================
+4. ORM
+======================================================================
+
+ORM recomendado:
+
+- Prisma.
+
+Motivos:
+
+- Tipagem boa com TypeScript.
+- Migrations organizadas.
+- Modelagem clara.
+- Fácil leitura para Codex/Claude.
+- Facilita manutenção.
+
+======================================================================
+5. AUTENTICAÇÃO
+======================================================================
+
+Autenticação simples, sem sistema pesado.
+
+Recomendação:
+
+- Usuário + senha.
+- Senha com hash.
+- Sessão em cookie HTTP-only.
+- Expiração de 3 horas.
+- Tabela Session no banco ou JWT assinado no cookie.
+
+Opção recomendada para simplicidade:
+
+- Cookie com token aleatório.
+- Token salvo com hash na tabela Session.
+- expiresAt = now + 3h.
+
+Fluxo:
+
+1. Usuário envia username e senha.
+2. Backend valida.
+3. Backend cria sessão.
+4. Backend grava cookie HTTP-only.
+5. Middleware valida cookie.
+6. Se expirado, remove sessão e redireciona para login.
+
+======================================================================
+6. PWA
+======================================================================
+
+A aplicação deve funcionar como app salvo na tela inicial do celular.
+
+Configurações necessárias:
+
+- public/manifest.webmanifest
+- public/icons/icon-192.png
+- public/icons/icon-512.png
+- theme_color
+- background_color
+- display: standalone
+- start_url: /
+- name: ComercialPro
+- short_name: ComercialPro
+
+======================================================================
+7. ESTRUTURA DE PASTAS SUGERIDA
+======================================================================
+
+src/
+  app/
+    login/
+      page.tsx
+    cadastro/
+      page.tsx
+    aguardando-aprovacao/
+      page.tsx
+    admin/
+      page.tsx
+      cadastros/
+        page.tsx
+      usuarios/
+        page.tsx
+      previsoes/
+        page.tsx
+    consultor/
+      page.tsx
+    gerente/
+      page.tsx
+      consultores/
+        page.tsx
+    regional/
+      page.tsx
+      gerentes/
+        page.tsx
+    api/
+      auth/
+        login/
+          route.ts
+        logout/
+          route.ts
+      cadastro/
+        route.ts
+      admin/
+        approve-user/
+          route.ts
+        reject-user/
+          route.ts
+      forecast/
+        route.ts
+      cron/
+        reset-daily/
+          route.ts
+
+  components/
+    ui/
+      Button.tsx
+      Input.tsx
+      Card.tsx
+      MoneyInput.tsx
+      Badge.tsx
+      Modal.tsx
+    layout/
+      AppShell.tsx
+      BottomNav.tsx
+      Header.tsx
+    forecast/
+      ForecastForm.tsx
+      ForecastCard.tsx
+      ConsultantForecastList.tsx
+      ManagerForecastList.tsx
+    users/
+      PendingUserCard.tsx
+      UserRoleSelect.tsx
+      ManagerSelect.tsx
+
+  lib/
+    prisma.ts
+    auth.ts
+    session.ts
+    permissions.ts
+    money.ts
+    dates.ts
+    password.ts
+
+  services/
+    auth.service.ts
+    user.service.ts
+    approval.service.ts
+    forecast.service.ts
+    reset.service.ts
+
+  types/
+    roles.ts
+    forecast.ts
+    user.ts
+
+prisma/
+  schema.prisma
+  migrations/
+  seed.ts
+
+docs/
+  00_CONTEXTUALIZACAO_GERAL_Codex_Claude.txt
+  01_REQUISITOS_FUNCIONAIS.txt
+  02_REQUISITOS_NAO_FUNCIONAIS.txt
+  03_STACK_E_ARQUITETURA.txt
+  04_MODELAGEM_BANCO.txt
+  05_PLANO_CODIFICACAO_20_ETAPAS.txt
+  06_INSTRUCOES_PERMANENTES_CODEX_CLAUDE.txt
+
+======================================================================
+8. PADRÃO DE ROTAS
+======================================================================
+
+Rotas públicas:
+
+- /login
+- /cadastro
+- /aguardando-aprovacao
+
+Rotas protegidas:
+
+- /admin
+- /consultor
+- /gerente
+- /regional
+
+Rotas de API:
+
+- POST /api/auth/login
+- POST /api/auth/logout
+- POST /api/cadastro
+- GET /api/admin/pending-users
+- POST /api/admin/approve-user
+- POST /api/admin/reject-user
+- GET /api/forecast
+- POST /api/forecast
+- PATCH /api/forecast/:id
+- GET /api/cron/reset-daily
+
+======================================================================
+9. PADRÃO DE SERVICES
+======================================================================
+
+auth.service.ts:
+- login
+- logout
+- getCurrentUser
+- validateSession
+
+user.service.ts:
+- createPendingUser
+- listApprovedManagers
+- listUsers
+- getUserById
+
+approval.service.ts:
+- listPendingUsers
+- approveUser
+- rejectUser
+- assignManager
+
+forecast.service.ts:
+- getCurrentOperationalDate
+- upsertConsultantForecast
+- getConsultantForecast
+- getManagerForecasts
+- getRegionalForecasts
+- updateConsultantForecastByManager
+- updateConsultantForecastByRegional
+- getAdminForecasts
+
+reset.service.ts:
+- resetDailyForecasts
+- checkResetAlreadyExecuted
+- createResetLog
+
+permissions.ts:
+- assertAdmin
+- assertManager
+- assertRegional
+- assertConsultant
+- canManagerEditConsultant
+- canRegionalEditConsultant
+
+======================================================================
+10. AMBIENTE
+======================================================================
+
+.env.example:
+
+DATABASE_URL=""
+SESSION_SECRET=""
+CRON_SECRET=""
+APP_URL="http://localhost:3000"
+
+Nunca colocar valores reais no repositório.
+
+======================================================================
+11. DEPLOY
+======================================================================
+
+Opção simples:
+
+- Vercel para Next.js.
+- Neon para banco.
+- Cron da Vercel chamando /api/cron/reset-daily.
+
+Opção alternativa:
+
+- Render Web Service.
+- Neon para banco.
+- Cron externo ou cron job do Render, se disponível.
+
+Para MVP, preferir Vercel + Neon pela simplicidade.

@@ -1,0 +1,164 @@
+# COMERCIALPRO — CHECKLIST FINAL DO MVP
+
+Use este checklist antes de considerar a primeira versão pronta.
+
+======================================================================
+1. PROJETO
+======================================================================
+
+[ ] Projeto Next.js criado.
+[ ] TypeScript ativo.
+[ ] Tailwind ativo.
+[ ] App Router ativo.
+[ ] Estrutura src organizada.
+[ ] Pasta docs criada.
+[ ] README básico criado.
+
+======================================================================
+2. BANCO
+======================================================================
+
+[ ] Neon configurado.
+[ ] DATABASE_URL no .env.
+[ ] Prisma instalado.
+[ ] schema.prisma criado.
+[ ] Migration executada.
+[ ] Seed do admin funcionando.
+
+======================================================================
+3. SEGREDOS
+======================================================================
+
+[ ] DATABASE_URL não aparece no frontend.
+[ ] Nenhum secret usa NEXT_PUBLIC.
+[ ] .env não foi commitado.
+[ ] .env.example criado.
+[ ] passwordHash não retorna para frontend.
+[ ] Logs não mostram senha ou token.
+
+======================================================================
+4. LOGIN E SESSÃO
+======================================================================
+
+[ ] Login funciona.
+[ ] Logout funciona.
+[ ] Senha com hash.
+[ ] Cookie HTTP-only.
+[ ] Sessão expira em 3 horas.
+[ ] Usuário pendente não acessa.
+[ ] Usuário rejeitado não acessa.
+[ ] Redirecionamento por perfil funciona.
+
+======================================================================
+5. CADASTRO
+======================================================================
+
+[ ] Tela de cadastro existe.
+[ ] Nome completo obrigatório.
+[ ] Usuário obrigatório.
+[ ] Senha obrigatória.
+[ ] Tipo de solicitação obrigatório.
+[ ] Consultor escolhe gerente.
+[ ] Gerente não escolhe gerente.
+[ ] Regional não escolhe gerente.
+[ ] Cadastro nasce PENDING.
+
+======================================================================
+6. ADMIN
+======================================================================
+
+[ ] Admin vê cadastros pendentes.
+[ ] Admin aprova usuário.
+[ ] Admin rejeita usuário.
+[ ] Admin define perfil.
+[ ] Admin vincula consultor a gerente.
+[ ] Admin vê usuários aprovados.
+[ ] Admin vê previsões.
+[ ] Admin vê total geral.
+
+======================================================================
+7. CONSULTOR
+======================================================================
+
+[ ] Consultor acessa dashboard própria.
+[ ] Consultor vê boas-vindas.
+[ ] Consultor informa produção.
+[ ] Consultor informa seguro.
+[ ] Consultor informa TC.
+[ ] Consultor marca sem previsão.
+[ ] Consultor envia previsão.
+[ ] Consultor só vê a própria previsão.
+
+======================================================================
+8. GERENTE
+======================================================================
+
+[ ] Gerente acessa dashboard própria.
+[ ] Gerente vê boas-vindas.
+[ ] Gerente vê prévia total.
+[ ] Gerente vê consultores vinculados.
+[ ] Gerente não vê consultores de outro gerente.
+[ ] Gerente edita consultor vinculado.
+[ ] Total do gerente atualiza.
+
+======================================================================
+9. GERENTE REGIONAL
+======================================================================
+
+[ ] Regional acessa dashboard própria.
+[ ] Regional vê boas-vindas.
+[ ] Regional vê prévia total.
+[ ] Regional vê gerentes.
+[ ] Regional clica em gerente.
+[ ] Regional vê consultores do gerente.
+[ ] Regional edita consultor.
+[ ] Total regional atualiza.
+
+======================================================================
+10. RESET
+======================================================================
+
+[ ] getOperationalDate implementado.
+[ ] Após 19h, data operacional muda.
+[ ] Totais aparecem zerados no novo ciclo.
+[ ] Histórico não é apagado.
+[ ] ResetLog registra execução.
+[ ] Rota cron protegida.
+[ ] Cron configurado.
+
+======================================================================
+11. PWA
+======================================================================
+
+[ ] Manifest criado.
+[ ] Ícones criados.
+[ ] display standalone.
+[ ] App instala no celular.
+[ ] App abre sem aparência de navegador, quando possível.
+[ ] Layout funciona em celular.
+
+======================================================================
+12. BUILD
+======================================================================
+
+[ ] npm run lint passa.
+[ ] npm run build passa.
+[ ] Prisma generate executa.
+[ ] Deploy conecta no Neon.
+[ ] Login admin funciona em produção.
+[ ] Cron funciona em produção.
+
+======================================================================
+13. RESULTADO ESPERADO
+======================================================================
+
+O MVP está pronto quando:
+
+- Usuário se cadastra.
+- Admin aprova.
+- Consultor lança previsão.
+- Gerente acompanha equipe.
+- Regional acompanha gerentes.
+- Admin acompanha tudo.
+- Reset às 19h funciona.
+- App pode ser salvo na tela inicial do celular.

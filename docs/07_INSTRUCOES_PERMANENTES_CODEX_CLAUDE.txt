@@ -1,0 +1,290 @@
+# COMERCIALPRO — INSTRUÇÕES PERMANENTES PARA CODEX / CLAUDE
+
+Este arquivo deve ser lido antes de qualquer alteração no projeto.
+
+======================================================================
+1. OBJETIVO DO PROJETO
+======================================================================
+
+Construir uma aplicação web leve, moderna, mobile-first e instalável como PWA, para controle diário de previsão de pagamento por consultores, gerentes e gerente regional.
+
+A aplicação deve ser simples, mas bem estruturada.
+
+Não criar complexidade desnecessária.
+
+======================================================================
+2. ORDEM DE ANÁLISE
+======================================================================
+
+Antes de codificar, sempre analisar:
+
+1. docs/00_CONTEXTUALIZACAO_GERAL_Codex_Claude.txt
+2. docs/01_REQUISITOS_FUNCIONAIS.txt
+3. docs/02_REQUISITOS_NAO_FUNCIONAIS.txt
+4. docs/03_STACK_E_ARQUITETURA.txt
+5. docs/04_MODELAGEM_BANCO_PRISMA.txt
+6. docs/05_PLANO_CODIFICACAO_20_ETAPAS.txt
+7. docs/06_REGRAS_DE_NEGOCIO_E_PERMISSOES.txt
+8. Este arquivo.
+
+======================================================================
+3. DIRETRIZES DE CODIFICAÇÃO
+======================================================================
+
+Sempre:
+
+- Trabalhar em etapas pequenas.
+- Explicar o que será alterado.
+- Evitar quebrar fluxo existente.
+- Criar componentes reutilizáveis.
+- Separar regra de negócio da interface.
+- Validar permissão no servidor.
+- Usar TypeScript corretamente.
+- Usar nomes claros.
+- Evitar gambiarras.
+- Evitar duplicação de código.
+- Manter estrutura simples.
+
+Nunca:
+
+- Expor DATABASE_URL.
+- Expor senha do banco.
+- Expor API key.
+- Usar NEXT_PUBLIC em secret privado.
+- Salvar senha pura.
+- Enviar passwordHash para o frontend.
+- Deixar gerente acessar consultor de outro gerente.
+- Deixar consultor acessar dados de outros.
+- Deixar usuário pendente acessar dashboard.
+- Apagar histórico no reset.
+- Criar dependências pesadas sem necessidade.
+- Criar arquitetura exagerada.
+
+======================================================================
+4. PADRÃO DE RESPOSTA AO IMPLEMENTAR
+======================================================================
+
+Quando for implementar uma etapa, responder com:
+
+1. Arquivos que serão criados/alterados.
+2. Objetivo da alteração.
+3. Código.
+4. Como testar.
+5. Riscos ou pontos de atenção.
+
+======================================================================
+5. PADRÃO VISUAL
+======================================================================
+
+O visual deve ser:
+
+- Clean.
+- Moderno.
+- Leve.
+- Mobile-first.
+- Com aparência de app.
+- Com cards.
+- Com botões grandes.
+- Com boa leitura em celular.
+
+Evitar:
+
+- Tabelas em telas pequenas.
+- Menus complexos.
+- Excesso de texto.
+- Excesso de cores.
+- Layout poluído.
+
+Preferir:
+
+- Cards.
+- Listas.
+- Modal simples.
+- Indicadores de total.
+- Destaque para "Prévia total".
+
+======================================================================
+6. PADRÃO DE DADOS FINANCEIROS
+======================================================================
+
+Todos os valores devem ser tratados como Decimal no banco.
+
+Campos:
+
+- productionValue.
+- insuranceValue.
+- tcValue.
+
+Exibição:
+
+- Formatar como moeda brasileira.
+- Exemplo: R$ 1.250,00
+
+Entrada:
+
+- Aceitar digitação simples.
+- Normalizar no backend.
+- Nunca confiar apenas no frontend.
+
+======================================================================
+7. PADRÃO DE AUTORIZAÇÃO
+======================================================================
+
+Permissões obrigatórias:
+
+ADMIN:
+- Tudo.
+
+REGIONAL_MANAGER:
+- Gerentes e consultores visíveis.
+
+MANAGER:
+- Apenas consultores vinculados.
+
+CONSULTANT:
+- Apenas a própria previsão.
+
+Toda operação sensível deve validar:
+
+- Usuário logado.
+- Status APPROVED.
+- Role correta.
+- Vínculo correto.
+
+======================================================================
+8. PADRÃO DE RESET
+======================================================================
+
+O reset diário às 19h deve funcionar pela data operacional.
+
+Não apagar dados.
+
+Fluxo recomendado:
+
+- getOperationalDate() retorna a data correta do ciclo.
+- Antes das 19h, retorna data atual.
+- Depois das 19h, retorna próxima data.
+- Como nova data não tem previsões, os totais aparecem zerados.
+- ResetLog registra execução.
+
+A rota cron deve ser protegida por CRON_SECRET.
+
+======================================================================
+9. PADRÃO DE SESSÃO
+======================================================================
+
+Sessão:
+
+- Expira em 3 horas.
+- Cookie HTTP-only.
+- Token aleatório.
+- Token salvo com hash no banco.
+- expiresAt controlado no banco.
+
+Ao validar:
+
+- Se não existe sessão, bloquear.
+- Se expirou, bloquear.
+- Se revokedAt existe, bloquear.
+- Se usuário não está APPROVED, bloquear.
+
+======================================================================
+10. PADRÃO DE COMPONENTES
+======================================================================
+
+Criar componentes reaproveitáveis:
+
+- Button.
+- Input.
+- MoneyInput.
+- Card.
+- Badge.
+- Modal.
+- AppShell.
+- ForecastForm.
+- ForecastSummaryCard.
+- ConsultantCard.
+- ManagerCard.
+- PendingUserCard.
+
+Não repetir formulário em várias telas.
+
+======================================================================
+11. PADRÃO DE SERVICES
+======================================================================
+
+Regras de negócio devem ficar em services.
+
+Exemplo:
+
+forecast.service.ts:
+- upsertForecast
+- getManagerSummary
+- getRegionalSummary
+- updateForecastAsManager
+- updateForecastAsRegional
+- updateForecastAsAdmin
+
+approval.service.ts:
+- approveUser
+- rejectUser
+- listPendingUsers
+
+auth.service.ts:
+- login
+- logout
+- validateSession
+
+reset.service.ts:
+- runDailyReset
+- hasResetRunToday
+
+======================================================================
+12. TESTES MANUAIS OBRIGATÓRIOS
+======================================================================
+
+Antes de considerar pronto, testar:
+
+1. Admin faz login.
+2. Consultor solicita cadastro escolhendo gerente.
+3. Gerente solicita cadastro sem escolher gerente.
+4. Regional solicita cadastro sem escolher gerente.
+5. Admin aprova consultor.
+6. Admin aprova gerente.
+7. Admin aprova regional.
+8. Consultor envia previsão.
+9. Gerente vê consultor.
+10. Gerente edita consultor.
+11. Gerente não vê consultor de outro gerente.
+12. Regional vê gerentes.
+13. Regional clica no gerente.
+14. Regional edita consultor.
+15. Admin vê todos.
+16. Sessão expira.
+17. Reset muda data operacional.
+18. PWA instala na tela inicial.
+19. Nenhum secret aparece no frontend.
+20. Build final passa sem erro.
+
+======================================================================
+13. COMPORTAMENTO ESPERADO DO CODEX/CLAUDE
+======================================================================
+
+Ao receber uma tarefa:
+
+- Ler contexto.
+- Identificar etapa.
+- Não sair criando funcionalidades extras.
+- Não alterar regra de negócio sem necessidade.
+- Não remover segurança mínima.
+- Não trocar stack sem pedir.
+- Não transformar o projeto em algo pesado.
+- Priorizar simplicidade e funcionamento.
+- Manter compatibilidade com Neon.
+- Manter foco mobile-first.
+
+======================================================================
+14. FRASE-CHAVE DO PROJETO
+======================================================================
+
+"ComercialPro deve ser um sistema simples, leve e moderno para previsão diária de pagamentos, com hierarquia clara entre consultor, gerente, gerente regional e admin."
