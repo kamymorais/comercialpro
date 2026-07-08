@@ -39,3 +39,4 @@ prisma:query SELECT "public"."User"."id", "public"."User"."fullName", "public"."
 ✓ Finished filesystem cache database compaction in 38.1s
  GET / 200 in 4.9s (next.js: 3.3s, application-code: 1618ms)
  GET / 307 in 171ms (next.js: 28ms, application-code: 143ms)
+✓ Compiled in 2.9s

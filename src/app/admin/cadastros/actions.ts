@@ -20,6 +20,8 @@ export async function approvePendingUserAction(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/cadastros");
+  revalidatePath("/admin/usuarios");
+  revalidatePath("/cadastro");
   redirect("/admin/cadastros?status=approved");
 }
 
@@ -30,5 +32,7 @@ export async function rejectPendingUserAction(formData: FormData) {
 
   revalidatePath("/admin");
   revalidatePath("/admin/cadastros");
+  revalidatePath("/admin/usuarios");
+  revalidatePath("/cadastro");
   redirect("/admin/cadastros?status=rejected");
 }

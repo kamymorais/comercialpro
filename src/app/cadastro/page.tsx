@@ -2,6 +2,8 @@ import { Card } from "@/components/ui/Card";
 import { CadastroForm } from "@/app/cadastro/CadastroForm";
 import { listApprovedManagers } from "@/services/user.service";
 
+export const dynamic = "force-dynamic";
+
 export default async function CadastroPage() {
   const managers = await listApprovedManagers();
 
