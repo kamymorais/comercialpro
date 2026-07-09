@@ -8,6 +8,7 @@ import {
   createPendingUserAction,
   type CadastroFormState,
 } from "@/app/cadastro/actions";
+import { formatFullNameInput } from "@/lib/validation";
 import type { ManagerOption } from "@/services/user.service";
 
 type CadastroFormProps = {
@@ -22,6 +23,8 @@ export function CadastroForm({ managers }: CadastroFormProps) {
     initialState,
   );
   const [requestedRole, setRequestedRole] = useState("CONSULTANT");
+  const [fullName, setFullName] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <form action={formAction} className="space-y-4">
@@ -31,6 +34,8 @@ export function CadastroForm({ managers }: CadastroFormProps) {
         type="text"
         autoComplete="name"
         placeholder="Digite seu nome completo"
+        value={fullName}
+        onChange={(event) => setFullName(formatFullNameInput(event.target.value))}
         required
       />
       <Input
@@ -44,11 +49,20 @@ export function CadastroForm({ managers }: CadastroFormProps) {
       <Input
         label="Senha"
         name="password"
-        type="password"
+        type={showPassword ? "text" : "password"}
         autoComplete="new-password"
         placeholder="Crie sua senha"
         required
       />
+      <label className="flex w-fit items-center gap-2 text-sm font-medium text-slate-700">
+        <input
+          type="checkbox"
+          checked={showPassword}
+          onChange={(event) => setShowPassword(event.target.checked)}
+          className="h-4 w-4 rounded border-slate-300 text-blue-900 focus:ring-blue-900"
+        />
+        Mostrar senha
+      </label>
 
       <label className="block w-full" htmlFor="requestedRole">
         <span className="mb-2 block text-sm font-medium text-slate-800">

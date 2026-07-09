@@ -8,6 +8,7 @@ const protectedRoutePrefixes = [
   "/gerente",
   "/regional",
   "/verificador-margem",
+  "/diario-visita",
   "/inicio",
 ];
 

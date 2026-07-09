@@ -46,13 +46,13 @@ export type MarginUploadDebug = {
 };
 
 // "EXTRACTION_PENDING": arquivo recebido, extração ainda não tentada.
-// "CALCULATION_PENDING": texto extraído com sucesso; falta apenas o cálculo,
-// que fica para uma etapa futura.
+// "CALCULATION_AVAILABLE": texto extraído com sucesso; a UI já pode calcular
+// percentual de comprometimento e parcela disponível.
 export type MarginUploadResponse = {
   success: boolean;
   message: string;
   file?: MarginUploadFileInfo;
   extraction?: MarginExtractionResult;
-  nextStep?: "EXTRACTION_PENDING" | "CALCULATION_PENDING";
+  nextStep?: "EXTRACTION_PENDING" | "CALCULATION_AVAILABLE";
   debug?: MarginUploadDebug;
 };

@@ -101,10 +101,10 @@ export async function POST(request: Request) {
     return NextResponse.json<MarginUploadResponse>({
       success: true,
       message:
-        "Texto extraído com sucesso. O cálculo da margem será implementado na etapa final.",
+        "Texto extraído com sucesso. Confira o cálculo da margem abaixo.",
       file: validation.file,
       extraction,
-      nextStep: "CALCULATION_PENDING",
+      nextStep: "CALCULATION_AVAILABLE",
     });
   } catch (error) {
     if (error instanceof MarginExtractionError) {

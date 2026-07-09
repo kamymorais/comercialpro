@@ -46,6 +46,11 @@ export default async function InicioPage() {
             title="Verificador de Margem"
             description="Envie um contracheque em PDF e veja os dados extraídos."
           />
+          <MenuCard
+            href="/diario-visita"
+            title="Diário de visita"
+            description="Localize o convênio mais próximo pela localização do celular."
+          />
         </section>
       </div>
     </main>

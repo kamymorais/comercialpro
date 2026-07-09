@@ -44,15 +44,6 @@ export function MarginUploadResult({
 
   return (
     <div className="space-y-4">
-      <div className="space-y-1 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950">
-        <p>{message}</p>
-        {file ? (
-          <p className="text-xs text-blue-900">
-            {file.name} · {formatFileSize(file.size)}
-          </p>
-        ) : null}
-      </div>
-
       {extraction ? <MarginExtractionViewer extraction={extraction} /> : null}
     </div>
   );

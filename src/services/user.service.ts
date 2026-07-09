@@ -2,6 +2,7 @@ import type { RequestedRole } from "@/generated/prisma/client";
 import { hashPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import {
+  normalizeFullName,
   normalizeUsername,
   validateFullName,
   validatePassword,
@@ -51,7 +52,7 @@ export async function listApprovedManagers(): Promise<ManagerOption[]> {
 }
 
 export async function createPendingUser(input: CreatePendingUserInput) {
-  const fullName = input.fullName.trim();
+  const fullName = normalizeFullName(input.fullName);
   const username = normalizeUsername(input.username);
   const password = input.password;
   const requestedRole = input.requestedRole as RequestedRole;

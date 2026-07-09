@@ -6,6 +6,20 @@ export function normalizeUsername(username: string): string {
   return username.trim().toLowerCase();
 }
 
+export function normalizeFullName(fullName: string): string {
+  return fullName
+    .trim()
+    .toLowerCase()
+    .replace(/\s+/g, " ")
+    .replace(/(^|\s)(\S)/g, (match) => match.toUpperCase());
+}
+
+export function formatFullNameInput(fullName: string): string {
+  return fullName
+    .toLowerCase()
+    .replace(/(^|\s)(\S)/g, (match) => match.toUpperCase());
+}
+
 export function validateUsername(username: string): string | null {
   if (!isNonEmptyString(normalizeUsername(username))) {
     return "Informe um usuário.";

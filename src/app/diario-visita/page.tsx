@@ -1,11 +1,9 @@
 import { BackToMenuBar } from "@/components/layout/BackToMenuBar";
-import { MarginInfoCard } from "@/components/margin/MarginInfoCard";
-import { MarginUploadForm } from "@/components/margin/MarginUploadForm";
-import { Card } from "@/components/ui/Card";
+import { VisitDiary } from "@/components/visit/VisitDiary";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import { requireRole } from "@/lib/auth";
 
-export default async function VerificadorMargemPage() {
+export default async function DiarioVisitaPage() {
   await requireRole(["ADMIN", "CONSULTANT", "MANAGER", "REGIONAL_MANAGER"]);
 
   return (
@@ -16,9 +14,9 @@ export default async function VerificadorMargemPage() {
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">
               ComercialPro
             </p>
-            <h1 className="mt-2 text-3xl font-bold">Verificador de Margem</h1>
+            <h1 className="mt-2 text-3xl font-bold">Diário de visita</h1>
             <p className="mt-2 text-sm text-slate-600">
-              Envie um contracheque em PDF para extrair os dados do documento.
+              Localize o convênio mais próximo para registrar a visita.
             </p>
           </div>
           <LogoutButton />
@@ -26,14 +24,7 @@ export default async function VerificadorMargemPage() {
 
         <BackToMenuBar />
 
-        <Card>
-          <MarginUploadForm />
-        </Card>
-
-        <MarginInfoCard
-          title="Formatos aceitos"
-          description="PDF com texto selecionável, até 4 MB."
-        />
+        <VisitDiary />
       </div>
     </main>
   );
