@@ -1,0 +1,139 @@
+# COMERCIALPRO — MÓDULO VERIFICADOR DE MARGEM — CONTEXTO GERAL
+
+Este documento deve ser lido antes de qualquer codificação relacionada ao módulo
+Verificador de Margem.
+
+======================================================================
+1. OBJETIVO DO MÓDULO
+======================================================================
+
+Criar um segundo módulo dentro do ComercialPro, além do módulo já existente de
+Previsão de Pagamentos.
+
+O novo módulo se chama:
+
+Verificador de Margem
+
+Objetivo final (futuro, não desta etapa):
+
+Permitir que o usuário envie o PDF de um contracheque para o sistema, que vai
+extrair os dados relevantes e, em uma etapa final separada, aplicar uma regra
+de negócio para indicar se há margem disponível para uma operação comercial.
+
+Nesta primeira etapa (01/05), o objetivo é exclusivamente documentar o módulo.
+Nenhuma linha de código de produto deve ser escrita ainda.
+
+======================================================================
+2. ONDE O MÓDULO ENTRA NO COMERCIALPRO
+======================================================================
+
+O ComercialPro hoje possui um menu principal:
+
+- Previsão (previsão diária de pagamentos por consultor/gerente/regional/admin).
+
+A partir deste módulo, passará a existir um segundo menu:
+
+- Verificador de Margem
+
+Os dois menus convivem lado a lado. O módulo de Previsão não deve ser alterado,
+quebrado ou ter sua lógica modificada por causa deste novo módulo.
+
+======================================================================
+3. PERFIS COM ACESSO
+======================================================================
+
+Diferente do módulo de Previsão (que tem telas e permissões diferentes por
+perfil), o Verificador de Margem terá uma única tela, acessível por todos os
+perfis autenticados e aprovados:
+
+- CONSULTANT
+- MANAGER
+- REGIONAL_MANAGER
+- ADMIN
+
+Usuário PENDING ou REJECTED não acessa o módulo, da mesma forma que já não
+acessa nenhuma área operacional do sistema hoje.
+
+======================================================================
+4. RESUMO DO FLUXO FUTURO (NÃO IMPLEMENTAR AGORA)
+======================================================================
+
+1. Usuário autenticado acessa o menu "Verificador de Margem".
+2. Usuário anexa um PDF de contracheque.
+3. O sistema valida o arquivo (tipo e tamanho).
+4. O sistema envia o PDF para uma função Python responsável pela extração de
+   texto.
+5. O sistema exibe ao usuário os dados extraídos do contracheque.
+6. Somente em uma etapa futura, fora deste plano de 5 etapas, o sistema vai
+   aplicar uma regra de cálculo de margem sobre os dados extraídos. As 5
+   etapas do plano original (docs/modulo-verificador-margem/04_PLANO_5_ETAPAS.txt)
+   já foram concluídas sem implementar esse cálculo — ver
+   docs/modulo-verificador-margem/07_PENDENCIA_CALCULO_MARGEM.txt.
+
+======================================================================
+5. USO DE PYTHON PARA EXTRAÇÃO
+======================================================================
+
+A extração de texto do PDF será feita com Python, rodando como Function na
+Vercel, separada do app principal em Next.js.
+
+O Next.js continua sendo o app principal: autenticação, sessão, perfis, rotas,
+banco de dados e toda a lógica de negócio já existente do ComercialPro.
+
+O Python entra apenas como uma peça de infraestrutura para extração de texto
+de PDF — não substitui nem duplica nenhuma parte do backend atual.
+
+======================================================================
+6. SOBRE O PDF REAL USADO COMO REFERÊNCIA
+======================================================================
+
+Durante esta etapa de documentação, um PDF real de contracheque foi enviado
+pelo usuário como referência de layout (nome de colunas, rubricas, totais de
+rodapé como Margem/Bruto/Descontos/Líquido).
+
+Esse PDF contém dados pessoais reais (nome, CPF, matrícula, dados bancários) e
+foi usado apenas para entender a estrutura visual do documento.
+
+Regras obrigatórias:
+
+- O PDF real NÃO foi salvo no repositório.
+- O PDF real NÃO deve ser commitado em nenhuma etapa futura.
+- Nenhum teste automatizado deve usar os dados pessoais reais desse PDF.
+- Caso seja necessário manter um exemplo de contracheque dentro do projeto no
+  futuro (para testes de extração, por exemplo), deverá ser criada uma versão
+  anonimizada, sem nome real, sem CPF real, sem matrícula real e sem dados
+  bancários reais.
+
+======================================================================
+7. O CÁLCULO FICA POR ÚLTIMO
+======================================================================
+
+Ponto crítico deste módulo, válido para todas as etapas 02, 03, 04 e 05:
+
+A lógica de cálculo da margem ficará em stand by.
+O foco das 5 etapas foi preparar o módulo, a navegação, a tela, a estrutura
+de upload, a extração do PDF e a finalização visual/responsiva.
+O cálculo final será implementado somente em uma etapa futura, fora deste
+plano de 5 etapas, após validação completa do layout real do contracheque e
+dos dados extraídos — mediante um novo prompt específico.
+
+Ver detalhes em:
+docs/modulo-verificador-margem/02_REGRAS_DE_NEGOCIO_E_CALCULO_PENDENTE.txt
+docs/modulo-verificador-margem/07_PENDENCIA_CALCULO_MARGEM.txt
+
+======================================================================
+8. COMPATIBILIDADE COM O QUE JÁ EXISTE
+======================================================================
+
+Este módulo é aditivo. Nenhuma etapa dele pode:
+
+- Alterar a lógica de Previsão de Pagamentos.
+- Alterar login, sessão ou expiração de 3 horas.
+- Alterar perfis, permissões ou aprovação de cadastro.
+- Alterar o reset diário às 19h.
+- Alterar a modelagem Prisma existente sem necessidade real.
+- Quebrar o deploy atual na Vercel.
+- Quebrar a configuração de PWA já existente.
+
+Qualquer necessidade real de alteração em algo já existente deve ser registrada
+como ponto de atenção antes de ser feita.

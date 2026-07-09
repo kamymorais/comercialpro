@@ -1,5 +1,6 @@
 import { ForecastForm } from "@/components/forecast/ForecastForm";
 import { ForecastSummaryCard } from "@/components/forecast/ForecastSummaryCard";
+import { ModuleNav } from "@/components/layout/ModuleNav";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import { requireRole } from "@/lib/auth";
 import { getConsultantForecast } from "@/services/forecast.service";
@@ -33,6 +34,8 @@ export default async function ConsultorPage({
           </div>
           <LogoutButton />
         </header>
+
+        <ModuleNav role={consultant.role ?? "CONSULTANT"} active="previsao" />
 
         {saved ? (
           <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950">

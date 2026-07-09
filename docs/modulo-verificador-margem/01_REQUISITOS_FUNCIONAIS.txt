@@ -1,0 +1,125 @@
+# COMERCIALPRO — VERIFICADOR DE MARGEM — REQUISITOS FUNCIONAIS
+
+Estes requisitos descrevem o comportamento final do módulo, ao longo das 5
+etapas. Cada requisito indica, quando relevante, em qual etapa deve ser
+implementado. Nenhum requisito de código deste documento deve ser codificado
+na Etapa 01 — esta etapa é somente documentação.
+
+======================================================================
+1. ACESSO E NAVEGAÇÃO
+======================================================================
+
+RF-VM001 — O sistema deve exibir um menu "Verificador de Margem" para todo
+usuário autenticado e aprovado (CONSULTANT, MANAGER, REGIONAL_MANAGER, ADMIN).
+(Etapa 02)
+
+RF-VM002 — O sistema deve ter uma rota principal única: /verificador-margem.
+(Etapa 02)
+
+RF-VM003 — Usuário sem sessão válida não pode acessar /verificador-margem;
+deve ser redirecionado para /login, seguindo o mesmo padrão já usado pelo
+middleware do módulo de Previsão. (Etapa 02)
+
+RF-VM004 — Usuário com status PENDING ou REJECTED não pode acessar
+/verificador-margem, seguindo a mesma regra já aplicada às demais telas
+operacionais do sistema. (Etapa 02)
+
+RF-VM005 — A validação de perfil e sessão deve ocorrer no servidor, nunca
+apenas escondendo o menu no frontend. (Etapa 02 em diante)
+
+======================================================================
+2. TELA DO VERIFICADOR DE MARGEM
+======================================================================
+
+RF-VM006 — A tela deve conter:
+- Título "Verificador de Margem".
+- Descrição curta explicando o objetivo (analisar contracheque enviado).
+- Campo de upload de PDF.
+- Área de status do processamento (enviando, processando, concluído, erro).
+- Área de resultado da extração (dados/texto extraídos do PDF).
+- Aviso visível de que o cálculo final da margem ainda depende de uma etapa
+  futura do módulo.
+(Etapa 02 para a estrutura visual; Etapa 03/04 para status e resultado reais)
+
+RF-VM007 — A tela deve seguir o mesmo padrão visual já usado no restante do
+ComercialPro: mobile-first, cards, branco + azul-marinho, sem tabela pesada em
+tela pequena. (Etapa 02)
+
+======================================================================
+3. UPLOAD DE PDF
+======================================================================
+
+RF-VM008 — O sistema deve permitir que o usuário selecione um arquivo PDF para
+upload. (Etapa 03)
+
+RF-VM009 — O sistema deve validar, no servidor, que o tipo do arquivo é
+application/pdf. Arquivos de outro tipo devem ser rejeitados com mensagem
+amigável. (Etapa 03)
+
+RF-VM010 — O sistema deve validar, no servidor, que o tamanho do arquivo não
+ultrapassa o limite inicial de 4 MB. Arquivos maiores devem ser rejeitados com
+mensagem amigável. (Etapa 03)
+
+RF-VM011 — O sistema não deve processar ou interpretar o conteúdo do PDF no
+frontend. Toda validação de conteúdo ocorre no backend. (Etapa 03)
+
+RF-VM012 — O sistema não deve, no MVP, salvar o PDF de forma permanente em
+nenhum storage. Isso só poderá ser feito em etapa futura, com decisão explícita
+registrada em documentação. (Etapa 03)
+
+======================================================================
+4. EXTRAÇÃO DE TEXTO DO PDF
+======================================================================
+
+RF-VM013 — O backend Next.js deve enviar o PDF validado para uma função Python
+responsável por extrair o texto do documento. (Etapa 04)
+
+RF-VM014 — A função Python deve retornar o texto bruto extraído e, quando
+possível, uma estrutura inicial identificando blocos como rubricas e totais de
+rodapé. (Etapa 04)
+
+RF-VM015 — Caso o PDF não tenha texto extraível (por exemplo, PDF de imagem
+escaneada), o sistema deve retornar uma mensagem informando que não foi
+possível extrair texto suficiente, sem quebrar a aplicação. (Etapa 04)
+
+RF-VM016 — O sistema deve exibir ao usuário, na área de resultado, os dados
+extraídos do PDF (texto e/ou campos identificados). (Etapa 04)
+
+RF-VM017 — O sistema não deve expor o texto extraído de um usuário para outro
+usuário. Cada extração pertence exclusivamente à sessão/usuário que fez o
+upload. (Etapa 04)
+
+======================================================================
+5. HISTÓRICO (SE IMPLEMENTADO)
+======================================================================
+
+RF-VM018 — Se um histórico de verificações for implementado, cada registro
+deve pertencer a um usuário específico e não deve ser visível para outros
+usuários, exceto ADMIN, seguindo o mesmo padrão de visibilidade hierárquica já
+usado no módulo de Previsão. (Etapa 04 ou 05, a definir)
+
+RF-VM019 — O histórico, se existir, não deve armazenar o PDF original, apenas
+metadados e dados extraídos relevantes, para reduzir exposição de dados
+sensíveis. (Etapa 04 ou 05, a definir)
+
+======================================================================
+6. CÁLCULO DE MARGEM
+======================================================================
+
+RF-VM020 — O sistema NÃO deve calcular margem, aprovar ou negar nada nas
+Etapas 02, 03 e 04. (Todas as etapas até a 04)
+
+RF-VM021 — O cálculo final de margem só deve ser implementado na Etapa 05,
+após a extração dos dados estar validada com o layout real do contracheque.
+(Etapa 05)
+
+RF-VM022 — Antes da Etapa 05, a tela deve deixar explícito ao usuário que o
+resultado de aprovação/negação ainda não está disponível, evitando dar a
+entender que o sistema já decide algo. (Etapa 02 em diante)
+
+======================================================================
+7. NÃO FAZER NESTA ETAPA (01/05)
+======================================================================
+
+Nenhum dos requisitos acima deve ser codificado nesta etapa. Esta etapa entrega
+somente a documentação do módulo.

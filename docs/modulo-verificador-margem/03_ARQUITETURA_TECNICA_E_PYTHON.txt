@@ -1,0 +1,137 @@
+# COMERCIALPRO — VERIFICADOR DE MARGEM — ARQUITETURA TÉCNICA E PYTHON
+
+======================================================================
+1. STACK ATUAL DO COMERCIALPRO (NÃO MUDA)
+======================================================================
+
+O ComercialPro continua usando:
+
+- Next.js (App Router) como aplicação principal.
+- TypeScript.
+- Prisma ORM.
+- Neon PostgreSQL.
+- Deploy na Vercel.
+- Sessão em cookie HTTP-only.
+- PWA já configurado.
+
+O módulo Verificador de Margem é construído em cima dessa mesma base, sem
+trocar de stack e sem criar um backend separado para o restante do sistema.
+
+======================================================================
+2. ARQUITETURA PREVISTA DO MÓDULO
+======================================================================
+
+Frontend Next.js
+  -> Tela /verificador-margem
+  -> Upload do PDF
+
+Backend Next.js
+  -> Valida sessão
+  -> Valida perfil
+  -> Valida tipo/tamanho do arquivo
+  -> Chama função Python para extração de texto
+
+Python Function
+  -> Recebe PDF
+  -> Extrai texto
+  -> Retorna texto bruto e estrutura inicial
+
+Backend Next.js
+  -> Salva histórico básico, se aplicável
+  -> Retorna resultado de extração ao frontend
+
+Nenhuma dessas etapas é implementada agora. Este é o desenho de referência
+para as Etapas 03 e 04.
+
+======================================================================
+3. PYTHON NA VERCEL
+======================================================================
+
+A Vercel permite o uso de Python em Functions (Serverless Functions com
+runtime Python), publicadas junto do mesmo projeto Next.js, sem exigir uma
+infraestrutura separada.
+
+Uso previsto do Python neste módulo:
+
+- Exclusivamente para extração de texto de PDF.
+- Não substitui o Next.js como aplicação principal.
+- Não terá acesso direto ao banco de dados nesta fase — se precisar persistir
+  algo, o resultado retorna para o Next.js, que é quem fala com o Prisma/Neon.
+
+Comportamento esperado conforme o tipo de PDF:
+
+- Se o PDF tiver texto selecionável (como o modelo de referência analisado),
+  a extração tende a ser direta e confiável.
+- Se o PDF for uma imagem escaneada (sem camada de texto), a extração de texto
+  simples pode falhar ou retornar vazio.
+- OCR (reconhecimento óptico de caracteres para PDFs escaneados) fica FORA do
+  MVP deste módulo, salvo autorização explícita posterior.
+
+======================================================================
+4. BIBLIOTECAS PYTHON PREVISTAS (NÃO INSTALAR AGORA)
+======================================================================
+
+Candidatas para a Etapa 04, a avaliar no momento da implementação:
+
+- pypdf
+- pdfplumber
+
+Critérios que devem orientar a escolha, na hora certa:
+
+- Qualidade de extração no layout real do contracheque (tabelas com colunas
+  Rubrica/Descrição/Parcela/Detalhe/Vencimento/Desconto).
+- Facilidade de empacotamento como Vercel Function.
+- Tamanho da dependência (impacto no cold start da function).
+
+Nenhuma biblioteca deve ser instalada ou configurada nesta Etapa 01.
+
+======================================================================
+5. LIMITES DE UPLOAD (ETAPA 03)
+======================================================================
+
+- Tipo permitido: application/pdf.
+- Tamanho máximo inicial: 4 MB.
+- Arquivo maior que o limite: retornar erro amigável, sem expor detalhes
+  internos do servidor.
+- PDF sem texto extraível: retornar mensagem informando que o sistema não
+  conseguiu extrair texto suficiente, sem quebrar a aplicação.
+
+Nesta primeira fase (MVP do módulo):
+
+- Não implementar storage externo (S3, Blob, etc.).
+- Não salvar o PDF permanentemente. O arquivo deve ser tratado como
+  transitório: recebido, validado, enviado para extração, e descartado.
+  Qualquer necessidade futura de guardar o PDF original deve vir com uma
+  decisão de segurança e privacidade documentada à parte.
+
+======================================================================
+6. SEGURANÇA MÍNIMA DO MÓDULO
+======================================================================
+
+- Não processar ou interpretar o conteúdo do PDF no frontend — toda validação
+  de conteúdo é responsabilidade do backend.
+- Não confiar em nenhuma validação feita apenas no cliente (tipo/tamanho do
+  arquivo devem ser revalidados no servidor).
+- Não expor secrets (chaves, tokens de function, credenciais) no frontend.
+- Não expor a DATABASE_URL nem criar qualquer variável pública equivalente.
+- Não salvar PDF sensível no banco de dados.
+- Não logar o conteúdo completo do contracheque em produção — se algum log for
+  necessário para depuração, deve ser mínimo, sem dados pessoais (nome, CPF,
+  matrícula, conta bancária) e desabilitado fora de ambiente de
+  desenvolvimento.
+- A comunicação entre o Next.js e a Python Function deve ocorrer apenas
+  server-to-server, nunca exposta diretamente ao navegador do usuário.
+
+======================================================================
+7. INTEGRAÇÃO COM O QUE JÁ EXISTE
+======================================================================
+
+- A validação de sessão e perfil na rota /verificador-margem deve reaproveitar
+  os utilitários já existentes em src/lib/auth.ts (ex.: requireCurrentUser,
+  requireRole), da mesma forma que o módulo de Previsão já faz.
+- Nenhuma tabela Prisma será criada nesta etapa. Caso um histórico seja
+  modelado em etapa futura, ele deve seguir o mesmo padrão das tabelas
+  existentes (chaves estrangeiras para User, índices coerentes, sem
+  duplicação de dados sensíveis).
+- O deploy continua único, na Vercel, com o Next.js como entrada principal; a
+  Python Function é publicada como parte do mesmo projeto.

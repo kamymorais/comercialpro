@@ -1,0 +1,136 @@
+# COMERCIALPRO — VERIFICADOR DE MARGEM — REGRAS DE NEGÓCIO E CÁLCULO PENDENTE
+
+======================================================================
+ATUALIZAÇÃO — ETAPA 05 (STATUS FINAL DO PLANO DE 5 ETAPAS)
+======================================================================
+
+A Etapa 05 finalizou o módulo em termos de upload, extração, exibição e
+revisão visual, mas a lógica de cálculo continuará pendente para uma etapa
+futura específica, fora deste plano de 5 etapas.
+
+Ou seja: o cálculo NÃO foi implementado nem mesmo na Etapa 05 (a etapa final
+deste plano). Ele passa a ser uma pendência aberta, sem etapa numerada
+associada, só devendo ser codificado mediante um novo prompt específico.
+
+Detalhes completos da pendência em:
+docs/modulo-verificador-margem/07_PENDENCIA_CALCULO_MARGEM.txt
+
+======================================================================
+1. REGRA CENTRAL DESTA ETAPA
+======================================================================
+
+A lógica de cálculo da margem ficará por último.
+Nesta fase, o foco é preparar o módulo, a navegação, a tela, a estrutura de
+upload e a extração do PDF.
+O cálculo final será implementado somente após a conclusão deste plano de 5
+etapas, quando houver um prompt específico dedicado a essa funcionalidade —
+não automaticamente na Etapa 05.
+
+Esta regra vale para as Etapas 02, 03, 04 e 05.
+
+======================================================================
+2. O QUE DEVE SER EXTRAÍDO (ETAPA 04)
+======================================================================
+
+Antes de qualquer cálculo, o sistema deve primeiro extrair e exibir, com base
+no layout observado no PDF de referência:
+
+- Bruto (total de vencimentos).
+- Descontos (total de descontos).
+- Líquido.
+- Rubricas (lista de linhas com código, descrição, parcela, detalhe,
+  vencimento e/ou desconto).
+- Totais de rodapé, incluindo o campo "Margem" já presente no próprio PDF.
+
+Campos previstos para extração (nomes lógicos, sem compromisso de schema
+definitivo nesta etapa):
+
+- textoExtraido
+- salarioBruto
+- totalDescontos
+- rubricas
+- vencimentos
+- descontos
+- margemInformadaNoPdf
+- liquido
+- observacoesExtracao
+
+Nesta primeira fase do módulo (Etapas 02 a 04), a prioridade é extrair e
+exibir esses dados ao usuário. Nenhum desses campos deve alimentar uma decisão
+de aprovado/negado antes da Etapa 05.
+
+======================================================================
+3. O QUE NÃO DEVE SER CALCULADO AGORA
+======================================================================
+
+Não implementar, antes da Etapa 05:
+
+- Qualquer fórmula de limite de margem.
+- Qualquer percentual de comprometimento de renda.
+- Qualquer resultado de "aprovado" ou "negado".
+- Qualquer interpretação automática do campo "Margem" do PDF como decisão
+  comercial do ComercialPro.
+- Qualquer estimativa de valor quando os dados extraídos forem incompletos ou
+  ambíguos.
+
+Não inventar valores. Não estimar resultado sem dados. Se a extração falhar ou
+vier incompleta, o sistema deve comunicar isso claramente ao usuário, nunca
+preencher lacunas com suposições.
+
+======================================================================
+4. SOBRE O CAMPO "MARGEM" JÁ EXISTENTE NO PDF
+======================================================================
+
+O contracheque de referência já traz um campo chamado "Margem" no rodapé (no
+exemplo analisado, com valor negativo).
+
+Esse campo representa uma regra interna do órgão emissor da folha de
+pagamento, não a regra comercial do ComercialPro.
+
+Ele NÃO deve ser copiado automaticamente como resposta final do Verificador de
+Margem. Ele pode, no máximo, ser exibido como um dos dados extraídos do
+documento, claramente identificado como "informação do próprio contracheque",
+até que a Etapa 05 defina como (ou se) ele entra na regra comercial final.
+
+======================================================================
+5. REGRA PREVISTA — NÃO IMPLEMENTAR AGORA
+======================================================================
+
+O rascunho abaixo é apenas um registro de intenção para orientar a Etapa 05.
+Não deve ser codificado nas Etapas 02, 03 ou 04. Está sujeito a mudança após a
+extração real dos dados ser validada.
+
+    limiteMaximo = salarioBruto * 0.70
+    percentualComprometido = totalDescontos / salarioBruto
+    margemDisponivel = limiteMaximo - totalDescontos
+
+    Se totalDescontos >= limiteMaximo:
+      Negado
+
+    Se totalDescontos < limiteMaximo:
+      Aprovado com margem disponível
+
+Esta regra fica pendente para uma etapa futura, fora deste plano de 5 etapas.
+Não codificar sem um novo prompt específico.
+
+Pontos que a Etapa 05 deverá decidir antes de implementar essa regra:
+
+- Se o percentual de 70% é fixo ou configurável.
+- Se descontos consignados (empréstimos) devem ser tratados de forma
+  diferente de outros descontos (ex.: plano de saúde, IRRF, previdência).
+- Se o campo "Margem" do próprio PDF deve ser usado como referência cruzada ou
+  ignorado.
+- Como tratar contracheques com formato de rubricas diferente do modelo de
+  referência.
+
+======================================================================
+6. PRINCÍPIOS GERAIS ATÉ A ETAPA 05
+======================================================================
+
+- Extrair primeiro, decidir depois.
+- Mostrar ao usuário exatamente o que foi extraído, sem arredondar a régua de
+  responsabilidade sobre a decisão final.
+- Preferir dizer "não foi possível calcular ainda" a apresentar um número sem
+  regra validada.
+- Qualquer mensagem de resultado antes da Etapa 05 deve deixar claro que é
+  apenas extração de dados, não uma decisão de crédito/margem.

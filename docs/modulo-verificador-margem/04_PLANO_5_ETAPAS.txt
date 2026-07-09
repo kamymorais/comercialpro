@@ -1,0 +1,125 @@
+# COMERCIALPRO — VERIFICADOR DE MARGEM — PLANO DE 5 ETAPAS
+
+Este plano deve ser seguido em ordem, uma etapa por prompt, sem pular etapas.
+
+======================================================================
+ETAPA 01 — DOCUMENTAÇÃO DO MÓDULO, REQUISITOS E CHECKLIST
+======================================================================
+
+Objetivo: preparar toda a documentação do módulo antes de qualquer código.
+
+Entregas:
+- Pasta docs/modulo-verificador-margem/ criada.
+- Contexto, requisitos funcionais, regras de negócio (com cálculo marcado como
+  pendente), arquitetura técnica, este plano de 5 etapas, checklist do módulo
+  e instruções permanentes para Codex/Claude.
+
+Não codificar nada nesta etapa.
+
+======================================================================
+ETAPA 02 — MENU, ROTA E ESTRUTURA VISUAL BASE DO VERIFICADOR DE MARGEM
+======================================================================
+
+Objetivo: criar a navegação e a tela vazia/estática do módulo.
+
+Escopo previsto:
+- Adicionar item de menu "Verificador de Margem", visível para todos os
+  perfis autenticados e aprovados.
+- Criar a rota /verificador-margem.
+- Proteger a rota no servidor (sessão válida, status APPROVED), reaproveitando
+  requireCurrentUser/requireRole já existentes.
+- Montar a estrutura visual da tela: título, descrição, área reservada para
+  upload (ainda sem lógica), área reservada para status, área reservada para
+  resultado, aviso de que o cálculo final ainda não está disponível.
+- Seguir o padrão visual já usado no restante do app (mobile-first, cards,
+  branco + azul-marinho).
+
+Fora do escopo da Etapa 02:
+- Upload funcional.
+- Validação de arquivo.
+- Qualquer chamada a Python.
+- Qualquer cálculo.
+
+======================================================================
+ETAPA 03 — UPLOAD DE PDF, VALIDAÇÕES E PREPARAÇÃO PARA EXTRAÇÃO
+======================================================================
+
+Objetivo: permitir que o usuário envie um PDF e o backend valide esse envio.
+
+Escopo previsto:
+- Campo de upload funcional na tela.
+- Rota/handler no Next.js que recebe o arquivo.
+- Validação de tipo (application/pdf).
+- Validação de tamanho (máximo 4 MB).
+- Mensagens de erro amigáveis para arquivo inválido ou muito grande.
+- Preparação do payload que será enviado para a função Python (sem ainda
+  chamar a extração real, ou chamando uma function "stub"/placeholder, a
+  critério da implementação da etapa).
+
+Fora do escopo da Etapa 03:
+- Extração de texto real.
+- Qualquer cálculo.
+- Storage permanente do PDF.
+
+======================================================================
+ETAPA 04 — EXTRAÇÃO DE TEXTO DO PDF COM PYTHON E EXIBIÇÃO DOS DADOS
+EXTRAÍDOS
+======================================================================
+
+Objetivo: extrair o conteúdo do PDF e mostrar ao usuário o que foi entendido.
+
+Escopo previsto:
+- Function Python responsável pela extração de texto.
+- Integração Next.js -> Python -> Next.js.
+- Exibição do texto extraído e, quando possível, dos campos identificados
+  (bruto, descontos, rubricas, totais de rodapé, incluindo o campo "Margem" do
+  próprio PDF, exibido apenas como dado extraído).
+- Tratamento de erro quando o PDF não tiver texto extraível.
+- Histórico básico, se decidido nesta etapa (registro de que houve uma
+  verificação, sem guardar o PDF original).
+
+Fora do escopo da Etapa 04:
+- Qualquer cálculo de margem.
+- Qualquer resultado de aprovado/negado.
+- OCR de PDF escaneado.
+
+======================================================================
+ETAPA 05 — FINALIZAÇÃO VISUAL, HISTÓRICO ESTRUTURAL, RESPONSIVIDADE E
+TESTES — CÁLCULO PERMANECE PENDENTE
+======================================================================
+
+Objetivo: finalizar o módulo em termos de upload, extração e exibição, sem
+implementar cálculo.
+
+Nome original desta etapa no plano ("Lógica final de cálculo, resultado,
+histórico final, responsividade e testes") foi ajustado nesta execução: a
+decisão tomada foi NÃO implementar o cálculo mesmo na etapa final do plano,
+mantendo-o como pendência futura registrada separadamente (ver
+07_PENDENCIA_CALCULO_MARGEM.txt).
+
+Escopo realizado:
+- Refinamento visual e de texto da tela /verificador-margem.
+- Melhor exibição dos dados extraídos (campos candidatos, rubricas, texto).
+- Revisão de português em toda a tela e componentes do módulo.
+- Revisão de responsividade mobile (grids ajustados para mobile-first).
+- Revisão do menu (ModuleNav) nas 4 dashboards e na tela do módulo.
+- Documentação da pendência de histórico estrutural (nenhum model Prisma
+  novo foi criado, por falta de especificação suficiente).
+- Atualização final do checklist do módulo.
+
+Explicitamente NÃO realizado nesta etapa:
+- Cálculo de margem.
+- Resultado aprovado/negado.
+- Percentual comprometido, limite de 70%, margem disponível.
+- Histórico definitivo em banco (model/migration Prisma).
+
+======================================================================
+PONTO CRÍTICO DO PLANO
+======================================================================
+
+A lógica de cálculo de margem NÃO foi implementada em nenhuma das 5 etapas
+deste plano, incluindo a Etapa 05. Ela passa a ser uma pendência futura sem
+etapa numerada associada — só deve ser codificada mediante um novo prompt
+específico, conforme docs/modulo-verificador-margem/07_PENDENCIA_CALCULO_MARGEM.txt.
+Nenhuma etapa foi pulada. Nenhuma etapa começou sem o prompt correspondente
+do usuário.

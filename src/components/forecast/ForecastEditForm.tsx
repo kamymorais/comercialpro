@@ -42,17 +42,17 @@ export function ForecastEditForm({
         <MoneyInput
           label="Produção"
           name="productionValue"
-          defaultValue={formatMoneyInputValue(forecast.productionValue)}
+          defaultValue={forecast.productionValue}
         />
         <MoneyInput
           label="Seguros"
           name="insuranceValue"
-          defaultValue={formatMoneyInputValue(forecast.insuranceValue)}
+          defaultValue={forecast.insuranceValue}
         />
         <MoneyInput
           label="TC"
           name="tcValue"
-          defaultValue={formatMoneyInputValue(forecast.tcValue)}
+          defaultValue={forecast.tcValue}
         />
 
         <label className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
@@ -82,8 +82,4 @@ export function ForecastEditForm({
       </form>
     </Card>
   );
-}
-
-function formatMoneyInputValue(value: number): string {
-  return value ? value.toFixed(2).replace(".", ",") : "";
 }

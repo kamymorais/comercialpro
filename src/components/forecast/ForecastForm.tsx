@@ -1,5 +1,6 @@
 import { saveForecastAction } from "@/app/consultor/actions";
 import { Card } from "@/components/ui/Card";
+import { MoneyInput } from "@/components/ui/MoneyInput";
 import { formatBRL } from "@/lib/money";
 import type { ConsultantForecastView } from "@/services/forecast.service";
 
@@ -18,17 +19,21 @@ export function ForecastForm({ forecast }: ForecastFormProps) {
           </p>
         </div>
 
-        <MoneyField
+        <MoneyInput
           label="Produção"
           name="productionValue"
           defaultValue={forecast.productionValue}
         />
-        <MoneyField
+        <MoneyInput
           label="Seguros"
           name="insuranceValue"
           defaultValue={forecast.insuranceValue}
         />
-        <MoneyField label="TC" name="tcValue" defaultValue={forecast.tcValue} />
+        <MoneyInput
+          label="TC"
+          name="tcValue"
+          defaultValue={forecast.tcValue}
+        />
 
         <label className="flex items-start gap-3 rounded-lg border border-slate-200 bg-slate-50 p-4 text-sm text-slate-700">
           <input
@@ -51,32 +56,5 @@ export function ForecastForm({ forecast }: ForecastFormProps) {
         </button>
       </form>
     </Card>
-  );
-}
-
-function MoneyField({
-  label,
-  name,
-  defaultValue,
-}: {
-  label: string;
-  name: string;
-  defaultValue: number;
-}) {
-  return (
-    <label className="block w-full" htmlFor={name}>
-      <span className="mb-2 block text-sm font-medium text-slate-800">
-        {label}
-      </span>
-      <input
-        id={name}
-        name={name}
-        type="text"
-        inputMode="decimal"
-        defaultValue={defaultValue ? defaultValue.toFixed(2).replace(".", ",") : ""}
-        placeholder="0,00"
-        className="min-h-12 w-full rounded-lg border border-slate-200 bg-white px-4 py-3 text-base text-slate-950 shadow-sm outline-none transition placeholder:text-slate-400 focus:border-blue-900 focus:ring-2 focus:ring-blue-100"
-      />
-    </label>
   );
 }

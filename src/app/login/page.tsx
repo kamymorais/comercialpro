@@ -10,7 +10,7 @@ export default function LoginPage() {
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">
             {APP_NAME}
           </p>
-          <h1 className="mt-3 text-3xl font-bold">Acesse sua prévia diária</h1>
+          <h1 className="mt-3 text-3xl font-bold">Entrar</h1>
           <p className="mt-2 text-sm leading-6 text-slate-600">
             Entre com seu usuário e senha para continuar.
           </p>

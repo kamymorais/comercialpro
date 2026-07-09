@@ -1,0 +1,87 @@
+# COMERCIALPRO — VERIFICADOR DE MARGEM — INSTRUÇÕES PERMANENTES PARA CODEX/CLAUDE
+
+Este arquivo deve ser lido antes de qualquer alteração relacionada ao módulo
+Verificador de Margem, em qualquer etapa futura.
+
+======================================================================
+REGRAS PERMANENTES
+======================================================================
+
+1. Sempre ler toda a documentação do módulo em
+   docs/modulo-verificador-margem/ antes de codificar qualquer coisa.
+
+2. Sempre verificar o checklist em
+   docs/modulo-verificador-margem/05_CHECKLIST_STATUS_MODULO.txt antes de
+   iniciar uma etapa nova.
+
+3. Não pular etapas. Seguir a ordem 01 -> 02 -> 03 -> 04 -> 05.
+
+4. Não avançar para a próxima etapa sem um prompt explícito do usuário pedindo
+   essa etapa.
+
+5. Não implementar cálculo de margem sem um novo prompt específico dedicado
+   exatamente a essa funcionalidade — nem mesmo depois de concluídas as 5
+   etapas deste plano. A Etapa 05 finalizou o módulo (upload, extração,
+   exibição) sem implementar o cálculo; a pendência está registrada em
+   docs/modulo-verificador-margem/07_PENDENCIA_CALCULO_MARGEM.txt. Mesmo que
+   o usuário mencione a regra de forma resumida em algum prompt, não
+   codificar até haver instrução explícita e específica sobre o cálculo.
+
+6. Não processar ou interpretar o conteúdo do PDF no frontend. Toda validação
+   de conteúdo é responsabilidade do backend (Next.js) e da function Python.
+
+7. Não salvar o PDF real (com dados pessoais) no repositório, em nenhuma
+   etapa. Se um exemplo for necessário para testes, deve ser uma versão
+   anonimizada, sem nome, CPF, matrícula ou dados bancários reais.
+
+8. Não commitar nenhum PDF com dados pessoais reais, mesmo que enviado pelo
+   usuário como referência de layout.
+
+9. Não expor secrets (tokens, chaves de function, credenciais) no frontend ou
+   em logs.
+
+10. Não criar variáveis de ambiente públicas para dados sensíveis, como uma
+    eventual NEXT_PUBLIC_DATABASE_URL. Nenhuma URL de banco ou credencial pode
+    receber prefixo NEXT_PUBLIC_.
+
+11. Não logar dados sensíveis do contracheque (nome, CPF, matrícula, dados
+    bancários, valores individuais de rubricas) em produção. Logs de depuração,
+    se necessários, devem ser mínimos e restritos a ambiente de
+    desenvolvimento.
+
+12. Não alterar a lógica, as rotas ou os componentes do módulo de Previsão de
+    Pagamentos por causa deste módulo novo.
+
+13. Não quebrar login, sessão (expiração de 3 horas), perfis existentes,
+    aprovação de cadastro ou o reset diário às 19h.
+
+14. Sempre validar sessão e perfil no servidor para qualquer rota ou ação do
+    Verificador de Margem, reaproveitando os utilitários já existentes em
+    src/lib/auth.ts.
+
+15. Sempre rodar lint e build quando houver qualquer alteração de código
+    (não apenas documentação). Se a alteração for só em arquivos .txt de
+    documentação, registrar isso claramente em vez de rodar build à toa.
+
+16. Registrar pendências reais no checklist do módulo, com o status
+    [!] Atenção / precisa revisão e justificativa, em vez de marcar uma etapa
+    como concluída sem estar.
+
+======================================================================
+COMPORTAMENTO ESPERADO AO RECEBER UM NOVO PROMPT DESTE MÓDULO
+======================================================================
+
+Ao receber um prompt pedindo a próxima etapa:
+
+1. Ler a documentação do módulo.
+2. Conferir no checklist se as etapas anteriores estão concluídas.
+3. Se alguma etapa anterior obrigatória estiver pendente sem justificativa,
+   parar e informar o bloqueio antes de codificar.
+4. Executar somente a etapa pedida.
+5. Não codificar cálculo de margem sem um prompt específico dedicado a essa
+   funcionalidade — as 5 etapas do plano original já foram concluídas sem
+   implementar o cálculo (pendência registrada em
+   07_PENDENCIA_CALCULO_MARGEM.txt). Mesmo que uma etapa pareça relacionada a
+   extração de valores, isso não autoriza calcular nada com eles.
+6. Ao final, atualizar o checklist do módulo com data, resumo do que foi feito
+   e resultado de lint/build (quando aplicável).

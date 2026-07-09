@@ -1,0 +1,109 @@
+import { NextResponse } from "next/server";
+import { getCurrentUserFromSession } from "@/lib/auth";
+import type { Role } from "@/generated/prisma/client";
+import { validateMarginPdfFile } from "@/services/margin.service";
+import {
+  extractMarginPdfText,
+  MarginExtractionError,
+} from "@/services/marginExtraction.service";
+import type { MarginUploadResponse } from "@/types/margin";
+
+const ALLOWED_ROLES: Role[] = [
+  "ADMIN",
+  "CONSULTANT",
+  "MANAGER",
+  "REGIONAL_MANAGER",
+];
+
+export async function POST(request: Request) {
+  const user = await getCurrentUserFromSession();
+
+  if (!user || user.status !== "APPROVED" || !user.role) {
+    return NextResponse.json<MarginUploadResponse>(
+      { success: false, message: "Sessão inválida. Faça login novamente." },
+      { status: 401 },
+    );
+  }
+
+  if (!ALLOWED_ROLES.includes(user.role)) {
+    return NextResponse.json<MarginUploadResponse>(
+      {
+        success: false,
+        message: "Você não tem permissão para usar este módulo.",
+      },
+      { status: 403 },
+    );
+  }
+
+  let formData: FormData;
+
+  try {
+    formData = await request.formData();
+  } catch {
+    return NextResponse.json<MarginUploadResponse>(
+      { success: false, message: "Não foi possível enviar o arquivo agora." },
+      { status: 400 },
+    );
+  }
+
+  const file = formData.get("file");
+
+  if (!(file instanceof File)) {
+    return NextResponse.json<MarginUploadResponse>(
+      { success: false, message: "Selecione um arquivo PDF." },
+      { status: 400 },
+    );
+  }
+
+  const validation = await validateMarginPdfFile(file);
+
+  if (!validation.valid || !validation.file) {
+    return NextResponse.json<MarginUploadResponse>(
+      {
+        success: false,
+        message: validation.message ?? "Não foi possível enviar o arquivo agora.",
+      },
+      { status: 400 },
+    );
+  }
+
+  // O PDF nunca é salvo em disco/banco/storage — só passa pela memória desta
+  // requisição e da Python Function chamada abaixo, e é descartado em
+  // seguida. A extração de texto acontece em api/margin_extract.py.
+
+  try {
+    const extraction = await extractMarginPdfText({
+      file,
+      requestUrl: request.url,
+    });
+
+    return NextResponse.json<MarginUploadResponse>({
+      success: true,
+      message:
+        "Texto extraído com sucesso. O cálculo da margem será implementado na etapa final.",
+      file: validation.file,
+      extraction,
+      nextStep: "CALCULATION_PENDING",
+    });
+  } catch (error) {
+    if (error instanceof MarginExtractionError) {
+      return NextResponse.json<MarginUploadResponse>(
+        {
+          success: false,
+          message: error.message,
+          file: validation.file,
+        },
+        { status: error.status },
+      );
+    }
+
+    return NextResponse.json<MarginUploadResponse>(
+      {
+        success: false,
+        message: "Não foi possível processar o arquivo agora.",
+        file: validation.file,
+      },
+      { status: 502 },
+    );
+  }
+}

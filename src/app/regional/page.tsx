@@ -1,4 +1,5 @@
 import { ManagerForecastList } from "@/components/forecast/ManagerForecastList";
+import { ModuleNav } from "@/components/layout/ModuleNav";
 import { Card } from "@/components/ui/Card";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import { requireRole } from "@/lib/auth";
@@ -33,6 +34,8 @@ export default async function RegionalPage({ searchParams }: RegionalPageProps) 
           </div>
           <LogoutButton />
         </header>
+
+        <ModuleNav role={regional.role ?? "REGIONAL_MANAGER"} active="previsao" />
 
         {updated ? (
           <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950">

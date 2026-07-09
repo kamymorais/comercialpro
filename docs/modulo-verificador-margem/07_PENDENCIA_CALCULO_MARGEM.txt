@@ -1,0 +1,92 @@
+# PENDÊNCIA FUTURA — CÁLCULO DA MARGEM
+
+A lógica de cálculo da margem não foi implementada no MVP atual do módulo
+Verificador de Margem, mesmo após a conclusão das 5 etapas do plano original
+(docs/modulo-verificador-margem/04_PLANO_5_ETAPAS.txt).
+
+======================================================================
+1. MOTIVO
+======================================================================
+
+- Primeiro foi necessário validar upload, extração e leitura dos dados do
+  contracheque com o layout real do documento.
+- O cálculo será implementado somente após validação final do layout real
+  dos PDFs e dos campos extraídos (bruto, descontos, líquido, margem
+  informada no PDF, rubricas), incluindo casos de contracheques com formato
+  diferente do modelo de referência usado nas Etapas 01 a 05.
+- Decisão tomada na Etapa 05: finalizar o módulo em termos de upload,
+  extração, exibição, revisão visual, responsividade e segurança, mas manter
+  o cálculo fora do escopo até que exista um prompt específico dedicado a
+  essa funcionalidade.
+
+======================================================================
+2. REGRA PREVISTA — AINDA NÃO IMPLEMENTADA
+======================================================================
+
+    limiteMaximo = salarioBruto * 0.70
+    percentualComprometido = totalDescontos / salarioBruto
+    margemDisponivel = limiteMaximo - totalDescontos
+
+    Se totalDescontos >= limiteMaximo:
+      Negado
+
+    Se totalDescontos < limiteMaximo:
+      Aprovado com margem disponível
+
+Esta regra é apenas um rascunho de intenção (a mesma registrada em
+02_REGRAS_DE_NEGOCIO_E_CALCULO_PENDENTE.txt) e está sujeita a mudança.
+
+======================================================================
+3. PONTOS EM ABERTO PARA QUANDO O CÁLCULO FOR RETOMADO
+======================================================================
+
+- Se o percentual de 70% é fixo ou configurável.
+- Se descontos consignados (empréstimos) devem ser tratados de forma
+  diferente de outros descontos (ex.: plano de saúde, IRRF, previdência).
+- Se o campo "Margem" do próprio PDF deve ser usado como referência cruzada
+  ou ignorado.
+- Como tratar contracheques com formato de rubricas diferente do modelo de
+  referência.
+- Se o cálculo deve ser feito no Next.js (com os candidateFields já
+  extraídos) ou também na Python Function.
+- Se um histórico definitivo (com Prisma model/migration) precisa existir
+  antes do cálculo, para registrar quem processou o quê e quando — hoje o
+  módulo não persiste nada no banco (ver seção 4).
+
+======================================================================
+4. HISTÓRICO ESTRUTURAL — TAMBÉM PENDENTE
+======================================================================
+
+Não existe, até esta etapa, nenhum model Prisma para o Verificador de
+Margem. Cada verificação é processada em memória e descartada ao final da
+requisição, sem qualquer registro persistido.
+
+Se um histórico for necessário no futuro, ele deveria guardar apenas:
+
+- Usuário que processou.
+- Nome do arquivo.
+- Tamanho do arquivo.
+- Quantidade de páginas.
+- Campos candidatos extraídos (ou um resumo do texto).
+- Data/hora do processamento.
+- Status técnico da extração (sucesso/falha).
+
+E nunca guardar:
+
+- Resultado aprovado/negado.
+- Margem calculada.
+- Percentual comprometido.
+- O PDF original.
+
+Criar esse model exige uma migration Prisma nova, o que não foi feito nesta
+etapa por não haver especificação suficiente (nome da tabela, retenção de
+dados, se é por usuário ou por verificação) — fica registrado aqui como
+pendência, não implementado.
+
+======================================================================
+5. STATUS
+======================================================================
+
+- Pendente.
+- Não codificar cálculo, histórico definitivo ou decisão aprovado/negado sem
+  um novo prompt específico pedindo exatamente isso.

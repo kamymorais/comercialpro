@@ -2,7 +2,13 @@ import type { NextRequest } from "next/server";
 import { NextResponse } from "next/server";
 import { SESSION_COOKIE_NAME } from "@/lib/constants";
 
-const protectedRoutePrefixes = ["/admin", "/consultor", "/gerente", "/regional"];
+const protectedRoutePrefixes = [
+  "/admin",
+  "/consultor",
+  "/gerente",
+  "/regional",
+  "/verificador-margem",
+];
 
 const publicRoutePrefixes = [
   "/login",
