@@ -1,12 +1,17 @@
 import { MarginExtractionViewer } from "@/components/margin/MarginExtractionViewer";
 import { formatFileSize } from "@/lib/margin/format";
-import type { MarginExtractionResult, MarginUploadFileInfo } from "@/types/margin";
+import type {
+  MarginExtractionResult,
+  MarginUploadDebug,
+  MarginUploadFileInfo,
+} from "@/types/margin";
 
 type MarginUploadResultProps = {
   status: "error" | "success";
   message: string;
   file?: MarginUploadFileInfo;
   extraction?: MarginExtractionResult;
+  debug?: MarginUploadDebug;
 };
 
 export function MarginUploadResult({
@@ -14,6 +19,7 @@ export function MarginUploadResult({
   message,
   file,
   extraction,
+  debug,
 }: MarginUploadResultProps) {
   if (status === "error") {
     return (
@@ -21,10 +27,15 @@ export function MarginUploadResult({
         className="rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700"
         role="alert"
       >
-        {message}
+        <p>{message}</p>
         {file ? (
           <p className="mt-1 text-xs text-red-600">
             {file.name} · {formatFileSize(file.size)}
+          </p>
+        ) : null}
+        {process.env.NODE_ENV === "development" && debug?.stage ? (
+          <p className="mt-2 rounded border border-red-200 bg-white/60 px-2 py-1 text-xs text-red-700">
+            Debug seguro: {debug.stage} ({debug.status}) - {debug.detail}
           </p>
         ) : null}
       </div>

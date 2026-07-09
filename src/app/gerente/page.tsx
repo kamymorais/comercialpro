@@ -1,5 +1,5 @@
 import { ConsultantForecastList } from "@/components/forecast/ConsultantForecastList";
-import { ModuleNav } from "@/components/layout/ModuleNav";
+import { BackToMenuBar } from "@/components/layout/BackToMenuBar";
 import { Card } from "@/components/ui/Card";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import { requireRole } from "@/lib/auth";
@@ -35,7 +35,7 @@ export default async function GerentePage({ searchParams }: GerentePageProps) {
           <LogoutButton />
         </header>
 
-        <ModuleNav role={manager.role ?? "MANAGER"} active="previsao" />
+        <BackToMenuBar />
 
         {updated ? (
           <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950">

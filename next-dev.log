@@ -6,54 +6,11 @@
 - Local:         http://localhost:3000
 - Network:       http://192.168.1.10:3000
 - Environments: .env
-✓ Ready in 1335ms
+✓ Ready in 1855ms
 Creating turbopack project { dir: 'C:\\dev\\comercialpro', testMode: true }
 
- GET /login 200 in 1706ms (next.js: 1414ms, application-code: 292ms)
- GET /login 200 in 47ms (next.js: 8ms, application-code: 39ms)
-○ Compiling /api/cron/reset-daily ...
- GET /api/cron/reset-daily 500 in 4.2s (next.js: 4.1s, application-code: 59ms)
- GET /api/cron/reset-daily 500 in 16ms (next.js: 7ms, application-code: 9ms)
- GET /api/cron/reset-daily 500 in 42ms (next.js: 18ms, application-code: 24ms)
- GET /api/cron/reset-daily 500 in 34ms (next.js: 18ms, application-code: 15ms)
-✓ Compiled in 5s
-✓ Compiled in 451ms
-✓ Compiled in 4.9s
-✓ Compiled in 14.7s
-✓ Compiled in 9.1s
-✓ Compiled in 12.3s
-✓ Compiled in 2.1s
-✓ Compiled in 5.4s
-✓ Compiled in 1765ms
-✓ Finished writing to filesystem cache in 10.0s
-✓ Finished writing to filesystem cache in 15.7s
-✓ Compiled in 23.9s
-✓ Finished writing to filesystem cache in 10.8s
- GET /login 200 in 3.3s (next.js: 868ms, application-code: 2.5s)
- GET /login 200 in 218ms (next.js: 46ms, application-code: 172ms)
- GET /login 200 in 184ms (next.js: 33ms, application-code: 152ms)
-○ Compiling / ...
-○ Compiling /cadastro ...
- GET /aguardando-aprovacao 200 in 11.7s (next.js: 9.1s, application-code: 2.6s)
-prisma:query SELECT "public"."User"."id", "public"."User"."fullName", "public"."User"."username" FROM "public"."User" WHERE ("public"."User"."status" = CAST($1::text AS "public"."UserStatus") AND "public"."User"."role" = CAST($2::text AS "public"."Role")) ORDER BY "public"."User"."fullName" ASC, "public"."User"."username" ASC OFFSET $3
-✓ Finished filesystem cache database compaction in 38.1s
- GET / 200 in 4.9s (next.js: 3.3s, application-code: 1618ms)
- GET / 307 in 171ms (next.js: 28ms, application-code: 143ms)
-✓ Compiled in 2.9s
-✓ Compiled in 1336ms
-○ Compiling /verificador-margem ...
- GET /verificador-margem 200 in 6.5s (next.js: 5.6s, application-code: 895ms)
- GET /login 200 in 350ms (next.js: 113ms, application-code: 236ms)
- GET /verificador-margem 307 in 310ms (next.js: 32ms, application-code: 278ms)
-✓ Compiled in 1183ms
-✓ Compiled in 1178ms
- GET /verificador-margem 307 in 2.3s (next.js: 878ms, application-code: 1470ms)
-○ Compiling /api/verificador-margem/upload ...
- POST /api/verificador-margem/upload 401 in 47ms (next.js: 7ms, application-code: 40ms)
-✓ Compiled in 1507ms
-✓ Compiled in 1933ms
-✓ Compiled in 3.2s
- GET /login 200 in 2.7s (next.js: 1425ms, application-code: 1324ms)
- GET /login 200 in 160ms (next.js: 34ms, application-code: 126ms)
- GET /login 200 in 105ms (next.js: 12ms, application-code: 93ms)
- GET /verificador-margem 307 in 3.5s (next.js: 3.1s, application-code: 386ms)
+ POST /api/verificador-margem/upload 401 in 4.5s (next.js: 4.1s, application-code: 371ms)
+ POST /api/margin_extract 404 in 3.0s (next.js: 2.1s, application-code: 808ms)
+ POST /api/verificador-margem/upload 401 in 6.8s (next.js: 5.9s, application-code: 919ms)
+ POST /api/margin_extract 404 in 1376ms (next.js: 495ms, application-code: 881ms)
+ POST /api/margin_extract 404 in 506ms (next.js: 56ms, application-code: 450ms)

@@ -1,15 +1,24 @@
 "use client";
 
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
-import { Button } from "@/components/ui/Button";
 import { MarginUploadResult } from "@/components/margin/MarginUploadResult";
+import { Button } from "@/components/ui/Button";
 import { formatFileSize } from "@/lib/margin/format";
 import { validateMarginPdfFile } from "@/services/margin.service";
-import type { MarginUploadFileInfo, MarginUploadResponse } from "@/types/margin";
+import type {
+  MarginUploadDebug,
+  MarginUploadFileInfo,
+  MarginUploadResponse,
+} from "@/types/margin";
 
 type UploadState =
   | { status: "idle" }
-  | { status: "error"; message: string; file?: MarginUploadFileInfo }
+  | {
+      status: "error";
+      message: string;
+      file?: MarginUploadFileInfo;
+      debug?: MarginUploadDebug;
+    }
   | { status: "loading" }
   | { status: "success"; response: MarginUploadResponse };
 
@@ -69,10 +78,15 @@ export function MarginUploadForm() {
       const data = (await response.json()) as MarginUploadResponse;
 
       if (!response.ok || !data.success) {
+        if (data.debug?.stage && process.env.NODE_ENV === "development") {
+          console.log("Erro seguro do Verificador de Margem:", data.debug);
+        }
+
         setState({
           status: "error",
           message: data.message || GENERIC_ERROR_MESSAGE,
           file: data.file,
+          debug: data.debug,
         });
         return;
       }
@@ -159,6 +173,7 @@ export function MarginUploadForm() {
           status="error"
           message={state.message}
           file={state.file}
+          debug={state.debug}
         />
       ) : null}
 

@@ -1,11 +1,11 @@
 import { NextResponse } from "next/server";
-import { getCurrentUserFromSession } from "@/lib/auth";
 import type { Role } from "@/generated/prisma/client";
-import { validateMarginPdfFile } from "@/services/margin.service";
+import { getCurrentUserFromSession } from "@/lib/auth";
 import {
   extractMarginPdfText,
   MarginExtractionError,
 } from "@/services/marginExtraction.service";
+import { validateMarginPdfFile } from "@/services/margin.service";
 import type { MarginUploadResponse } from "@/types/margin";
 
 const ALLOWED_ROLES: Role[] = [
@@ -41,7 +41,15 @@ export async function POST(request: Request) {
     formData = await request.formData();
   } catch {
     return NextResponse.json<MarginUploadResponse>(
-      { success: false, message: "Não foi possível enviar o arquivo agora." },
+      {
+        success: false,
+        message: "Não foi possível enviar o arquivo agora.",
+        debug: {
+          stage: "FORM_DATA",
+          status: 400,
+          detail: "Requisição não chegou como multipart/form-data válido.",
+        },
+      },
       { status: 400 },
     );
   }
@@ -50,7 +58,15 @@ export async function POST(request: Request) {
 
   if (!(file instanceof File)) {
     return NextResponse.json<MarginUploadResponse>(
-      { success: false, message: "Selecione um arquivo PDF." },
+      {
+        success: false,
+        message: "Selecione um arquivo PDF.",
+        debug: {
+          stage: "FILE_VALIDATION",
+          status: 400,
+          detail: "Campo multipart 'file' ausente ou inválido.",
+        },
+      },
       { status: 400 },
     );
   }
@@ -62,13 +78,18 @@ export async function POST(request: Request) {
       {
         success: false,
         message: validation.message ?? "Não foi possível enviar o arquivo agora.",
+        debug: {
+          stage: "FILE_VALIDATION",
+          status: 400,
+          detail: validation.message ?? "Arquivo rejeitado pela validação.",
+        },
       },
       { status: 400 },
     );
   }
 
-  // O PDF nunca é salvo em disco/banco/storage — só passa pela memória desta
-  // requisição e da Python Function chamada abaixo, e é descartado em
+  // O PDF nunca é salvo em disco/banco/storage. Ele passa apenas pela memória
+  // desta requisição e da Python Function chamada abaixo, e é descartado em
   // seguida. A extração de texto acontece em api/margin_extract.py.
 
   try {
@@ -92,6 +113,7 @@ export async function POST(request: Request) {
           success: false,
           message: error.message,
           file: validation.file,
+          debug: error.debug,
         },
         { status: error.status },
       );
@@ -102,6 +124,11 @@ export async function POST(request: Request) {
         success: false,
         message: "Não foi possível processar o arquivo agora.",
         file: validation.file,
+        debug: {
+          stage: "PYTHON_FUNCTION_CALL",
+          status: 502,
+          detail: "Erro inesperado ao processar o PDF.",
+        },
       },
       { status: 502 },
     );

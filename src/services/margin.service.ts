@@ -12,7 +12,7 @@ export type MarginPdfValidationResult = {
 
 // Validação compartilhada entre frontend (melhora a experiência) e backend
 // (única validação que realmente importa). Nesta etapa, avalia apenas os
-// metadados do arquivo (nome, tipo, tamanho) — não lê o conteúdo do PDF.
+// metadados do arquivo (nome, tipo, tamanho). Não lê o conteúdo do PDF.
 export async function validateMarginPdfFile(
   file: File | null | undefined,
 ): Promise<MarginPdfValidationResult> {

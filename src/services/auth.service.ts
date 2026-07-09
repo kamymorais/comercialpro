@@ -1,4 +1,4 @@
-import { getDashboardPathByRole } from "@/lib/auth";
+import { HOME_PATH } from "@/lib/constants";
 import { verifyPassword } from "@/lib/password";
 import { prisma } from "@/lib/prisma";
 import {
@@ -79,7 +79,7 @@ export async function loginWithUsernameAndPassword(params: {
   return {
     token,
     expiresAt,
-    redirectTo: getDashboardPathByRole(user.role),
+    redirectTo: HOME_PATH,
   };
 }
 

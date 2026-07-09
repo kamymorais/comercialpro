@@ -83,9 +83,7 @@ export function MarginExtractionViewer({
       ) : null}
 
       <div>
-        <h4 className="text-sm font-semibold text-slate-900">
-          Texto extraído
-        </h4>
+        <h4 className="text-sm font-semibold text-slate-900">Texto extraído</h4>
         <div className="mt-2 max-h-64 overflow-y-auto whitespace-pre-wrap break-words rounded-lg border border-slate-200 bg-slate-50 p-3 text-xs leading-5 text-slate-700">
           {extraction.text}
         </div>

@@ -6,7 +6,7 @@ import type {
   User,
   UserStatus,
 } from "@/generated/prisma/client";
-import { SESSION_COOKIE_NAME } from "@/lib/constants";
+import { HOME_PATH, SESSION_COOKIE_NAME } from "@/lib/constants";
 import { prisma } from "@/lib/prisma";
 import { hashSessionToken, isSessionExpired } from "@/lib/session";
 
@@ -119,7 +119,7 @@ export async function requireRole(allowedRoles: Role[]): Promise<SafeUser> {
   }
 
   if (!allowedRoles.includes(user.role)) {
-    redirect(getDashboardPathByRole(user.role));
+    redirect(HOME_PATH);
   }
 
   return user;

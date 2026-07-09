@@ -11,7 +11,7 @@ export type MarginPageText = {
 
 // Valores apenas identificados no texto do PDF, ao lado dos rótulos do
 // rodapé (Bruto, Descontos, Líquido, Margem). São candidatos brutos, nunca
-// resultado de cálculo — cada campo é opcional pois pode não ser encontrado.
+// resultado de cálculo. Cada campo é opcional pois pode não ser encontrado.
 export type MarginCandidateFields = {
   bruto?: string;
   descontos?: string;
@@ -32,13 +32,27 @@ export type MarginExtractionResult = {
   warnings: string[];
 };
 
+export type MarginUploadDebug = {
+  stage:
+    | "AUTH"
+    | "FORM_DATA"
+    | "FILE_VALIDATION"
+    | "PYTHON_FUNCTION_CALL"
+    | "PYTHON_RESPONSE_PARSE"
+    | "PYTHON_EXTRACTION"
+    | "SERVER_CONFIG";
+  status: number;
+  detail: string;
+};
+
 // "EXTRACTION_PENDING": arquivo recebido, extração ainda não tentada.
 // "CALCULATION_PENDING": texto extraído com sucesso; falta apenas o cálculo,
-// que fica para a Etapa 05.
+// que fica para uma etapa futura.
 export type MarginUploadResponse = {
   success: boolean;
   message: string;
   file?: MarginUploadFileInfo;
   extraction?: MarginExtractionResult;
   nextStep?: "EXTRACTION_PENDING" | "CALCULATION_PENDING";
+  debug?: MarginUploadDebug;
 };

@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { ModuleNav } from "@/components/layout/ModuleNav";
+import { BackToMenuBar } from "@/components/layout/BackToMenuBar";
 import { Card } from "@/components/ui/Card";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import { requireRole } from "@/lib/auth";
@@ -28,7 +28,7 @@ export default async function AdminPage() {
           <LogoutButton />
         </header>
 
-        <ModuleNav role={admin.role ?? "ADMIN"} active="previsao" />
+        <BackToMenuBar />
 
         <section className="grid gap-4 md:grid-cols-3">
           <Card>
