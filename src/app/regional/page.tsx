@@ -23,7 +23,7 @@ export default async function RegionalPage({ searchParams }: RegionalPageProps) 
         <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">
-              Gerente regional
+              Superintendente
             </p>
             <h1 className="mt-2 text-3xl font-bold">
               Bem-vindo, {regional.fullName}

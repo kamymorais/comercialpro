@@ -6,7 +6,7 @@ type UserRoleSelectProps = {
 const roleLabels: Record<string, string> = {
   CONSULTANT: "Consultor",
   MANAGER: "Gerente",
-  REGIONAL_MANAGER: "Gerente regional",
+  REGIONAL_MANAGER: "Superintendente",
 };
 
 export function getRoleLabel(role: string | null | undefined): string {
@@ -35,7 +35,7 @@ export function UserRoleSelect({
       >
         <option value="CONSULTANT">Consultor</option>
         <option value="MANAGER">Gerente</option>
-        <option value="REGIONAL_MANAGER">Gerente regional</option>
+        <option value="REGIONAL_MANAGER">Superintendente</option>
       </select>
     </label>
   );

@@ -162,3 +162,24 @@ O MVP está pronto quando:
 - Admin acompanha tudo.
 - Reset às 19h funciona.
 - App pode ser salvo na tela inicial do celular.
+
+======================================================================
+14. DIARIO DE VISITA
+======================================================================
+
+[x] /diario-visita convertido em pagina inicial do modulo.
+[x] /diario-visita/localizar-convenio preserva localizador MPDFT.
+[x] Catalogo compartilhado criado em src/data/agreement-locations.ts.
+[x] Prisma modela VisitAssignment e VisitEvent.
+[x] Historico de eventos preserva mensagens anteriores.
+[x] Manager cria atividade para consultor da propria equipe.
+[x] Consultant envia relatorio e reenvia quando solicitado.
+[x] Manager conclui ou solicita refazer visita com validacao server-side.
+[x] Superintendente acompanha em modo somente leitura.
+[x] Admin acessa visao global somente leitura.
+[x] /inicio mostra aviso de pendencia para CONSULTANT.
+[x] Validacoes npx.cmd prisma format, npx.cmd prisma validate, npx.cmd prisma generate, npm run lint e npm run build passaram.
+[x] Suporte a fotos opcionais nos relatorios do Diario de visita.
+[x] VisitPhoto vinculado a VisitEvent.
+[x] Vercel Blob privado configuravel por BLOB_READ_WRITE_TOKEN.
+[x] Visualizacao autenticada de fotos por rota protegida.

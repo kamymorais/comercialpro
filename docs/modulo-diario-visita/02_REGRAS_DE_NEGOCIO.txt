@@ -1,0 +1,47 @@
+# MODULO DIARIO DE VISITA - REGRAS DE NEGOCIO E PERMISSOES
+
+Perfis:
+- CONSULTANT equivale ao operador mencionado no fluxo.
+- REGIONAL_MANAGER equivale ao gerente regional/gerente geral e continua sendo exibido como Superintendente.
+- Nenhum enum de perfil foi criado ou alterado.
+
+Status:
+- ASSIGNED = Aguardando visita.
+- SUBMITTED = Enviada para analise.
+- REVISION_REQUESTED = Refazer visita.
+- COMPLETED = Concluida.
+
+Eventos:
+- ASSIGNED.
+- CONSULTANT_SUBMITTED.
+- REVISION_REQUESTED.
+- COMPLETED.
+
+Transicoes:
+- Manager cria atividade como ASSIGNED e registra evento ASSIGNED.
+- Consultant envia relatorio de ASSIGNED ou REVISION_REQUESTED para SUBMITTED e registra CONSULTANT_SUBMITTED.
+- Manager solicita refazer visita somente de SUBMITTED para REVISION_REQUESTED, com observacao obrigatoria.
+- Manager conclui somente de SUBMITTED para COMPLETED, com observacao opcional.
+- COMPLETED bloqueia novas alteracoes operacionais.
+
+Validacoes server-side:
+- Todas as actions usam requireRole.
+- IDs de usuario operacional sao derivados da sessao quando possivel.
+- Manager so opera atividades criadas por ele para consultores aprovados da sua equipe.
+- Consultant so acessa e altera atividades atribuidas a ele.
+- Superintendente e Admin tem acompanhamento somente leitura no registro.
+- Textos sao normalizados, limitados a 2.000 caracteres e obrigatorios quando a regra exige.
+- Unidade e convenio sao validados pelo catalogo src/data/agreement-locations.ts.
+
+Fotos:
+- Fotos sao opcionais no envio de relatorio do consultor.
+- Somente CONSULTANT pode enviar fotos, e apenas em atividades dele com status ASSIGNED ou REVISION_REQUESTED.
+- Fotos ficam ligadas ao evento CONSULTANT_SUBMITTED, nao diretamente a VisitAssignment.
+- Eventos ja registrados nao recebem fotos posteriormente.
+- Fotos ja enviadas nao podem ser removidas, substituidas ou alteradas pela interface.
+- Manager, REGIONAL_MANAGER e ADMIN visualizam fotos em modo somente leitura.
+- Limite por envio: 5 fotos.
+- Limite por foto: 5 MB.
+- Tipos permitidos: image/jpeg, image/png e image/webp.
+- O servidor valida quantidade, MIME, tamanho, pathname, URL interna e assinatura inicial do arquivo.
+- Se o banco falhar apos upload, a action tenta remover os blobs recem-enviados.

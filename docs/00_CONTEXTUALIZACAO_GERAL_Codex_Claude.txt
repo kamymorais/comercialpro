@@ -280,3 +280,13 @@ Ao codificar este projeto:
 8. Evitar expor dados de outros perfis.
 9. Manter código simples e legível.
 10. Documentar decisões importantes dentro da pasta docs.
+
+======================================================================
+12. MODULO DIARIO DE VISITA
+======================================================================
+
+Em 2026-07-29 foi adicionada a documentacao especifica do modulo Diario de visita em:
+
+- docs/modulo-diario-visita/
+
+O modulo inclui localizador de convenio, atividades atribuidas por gerente, relatorios do consultor, solicitacao para refazer visita, conclusao e historico de eventos.

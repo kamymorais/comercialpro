@@ -1,0 +1,57 @@
+# MODULO DIARIO DE VISITA - MODELAGEM
+
+Migration:
+- prisma/migrations/20260729162000_add_visit_diary/migration.sql
+- prisma/migrations/20260729174500_add_visit_photos/migration.sql
+
+Enums:
+- VisitStatus
+- VisitEventType
+
+Models:
+- VisitAssignment
+- VisitEvent
+- VisitPhoto
+
+VisitAssignment armazena:
+- consultantId e relacao nomeada com User.
+- managerId e relacao nomeada com User.
+- agreementCode, agreementName.
+- unitId, unitName, unitAddress, unitLatitude, unitLongitude.
+- status.
+- assignedAt, submittedAt, completedAt.
+- createdAt, updatedAt.
+- relacao events.
+
+VisitEvent armazena:
+- visitAssignmentId e relacao com VisitAssignment.
+- authorId e relacao nomeada com User.
+- type.
+- note.
+- createdAt.
+- relacao photos.
+
+VisitPhoto armazena:
+- visitEventId e relacao com VisitEvent.
+- uploadedById e relacao nomeada com User.
+- pathname unico do Blob.
+- blobUrl interna retornada pelo Blob.
+- originalName.
+- contentType.
+- sizeBytes.
+- createdAt.
+
+Indices:
+- VisitAssignment(consultantId, status)
+- VisitAssignment(managerId, status)
+- VisitAssignment(createdAt)
+- VisitEvent(visitAssignmentId, createdAt)
+- VisitEvent(authorId)
+- VisitPhoto(visitEventId)
+- VisitPhoto(uploadedById)
+- VisitPhoto(createdAt)
+- VisitPhoto(pathname) unico
+
+Observacao:
+- A atividade salva uma copia do destino no momento da atribuicao. Alteracoes futuras no catalogo nao mudam historico antigo.
+- Fotos ficam preservadas por evento para manter separados relatorios originais e relatorios de refazer visita.

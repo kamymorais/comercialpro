@@ -1,0 +1,41 @@
+# MODULO DIARIO DE VISITA - CHECKLIST E STATUS
+
+Status em 2026-07-29:
+- [x] Catalogo MPDFT centralizado.
+- [x] AgreementLocator criado.
+- [x] /diario-visita convertido em menu do modulo.
+- [x] /diario-visita/localizar-convenio criado.
+- [x] /diario-visita/registrar criado com dashboard por perfil.
+- [x] /diario-visita/registrar/consultores/[consultorId] criado.
+- [x] /diario-visita/registrar/visitas/[visitId] criado.
+- [x] /diario-visita/registrar/gerentes/[managerId] criado.
+- [x] VisitAssignment e VisitEvent modelados.
+- [x] Migration adicionada.
+- [x] Servico de dominio criado.
+- [x] Server actions criadas.
+- [x] Aviso em /inicio para consultor.
+- [x] Superintendente e Admin em modo somente leitura.
+- [x] Documentacao atualizada.
+- [x] VisitPhoto modelado e vinculado a VisitEvent.
+- [x] Upload direto para Vercel Blob privado implementado com token delegado.
+- [x] Rota autenticada de visualizacao de fotos criada.
+- [x] Galeria por evento exibida na linha do tempo.
+- [x] Aplicacao continua aceitando relatorio sem fotos quando Blob nao esta configurado.
+
+Validacoes executadas:
+- npx.cmd prisma format: OK.
+- npx.cmd prisma validate: OK.
+- npx.cmd prisma generate: OK.
+- npm run lint: OK.
+- npm run build: OK.
+
+Validacoes apos suporte a fotos:
+- git diff --check: executar ao final.
+- npx.cmd prisma format: executar ao final.
+- npx.cmd prisma validate: executar ao final.
+- npx.cmd prisma generate: executar ao final.
+- npm run lint: executar ao final.
+- npm run build: executar ao final.
+
+Observacao:
+- O comando literal npx falhou no PowerShell local por politica de execucao de scripts para npx.ps1. Foi usado npx.cmd, equivalente no Windows.

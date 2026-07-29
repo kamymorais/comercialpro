@@ -1,0 +1,43 @@
+# MODULO DIARIO DE VISITA - INSTRUCOES PARA FUTURAS ALTERACOES
+
+Ao adicionar novos convenios:
+- Atualizar src/data/agreement-locations.ts.
+- Manter agreementCode estavel.
+- Nao mudar dados historicos diretamente no banco.
+- Se houver cadastro administrativo no futuro, criar nova modelagem especifica sem quebrar VisitAssignment.
+
+Ao alterar permissoes:
+- Manter regras no src/services/visit.service.ts.
+- Server actions devem continuar finas e protegidas com requireRole.
+- Nao confiar em campos ocultos do navegador.
+
+Ao alterar fotos:
+- Manter fotos vinculadas a VisitEvent.
+- Nao expor blobUrl diretamente na interface.
+- Usar /api/diario-visita/fotos/[photoId] para visualizacao autenticada.
+- Manter BLOB_READ_WRITE_TOKEN somente no servidor.
+- Preservar limites de 5 fotos por envio e 5 MB por foto, salvo nova decisao documentada.
+- Atualizar validacoes client e server juntas.
+
+Configuracao local do Blob:
+- Criar Blob Store privado na Vercel.
+- Obter BLOB_READ_WRITE_TOKEN no painel da Vercel ou via `vercel env pull`.
+- Preencher BLOB_READ_WRITE_TOKEN no .env local.
+
+Configuracao na Vercel:
+- Adicionar BLOB_READ_WRITE_TOKEN em Preview e Production.
+- Executar migration antes de liberar uso de fotos em ambiente com usuarios reais.
+
+Ao alterar status:
+- Atualizar enum Prisma.
+- Atualizar migration.
+- Atualizar getVisitStatusLabel, getVisitEventLabel e badges.
+- Revisar transicoes em submitConsultantVisitReport, requestVisitRevision e completeVisitAssignment.
+
+Fora do escopo atual:
+- Comprovante de presenca.
+- Geolocalizacao obrigatoria durante a visita.
+- Assinatura digital.
+- Push, WhatsApp ou e-mail.
+- Cadastro administrativo de convenios.
+- Exclusao de atividades.

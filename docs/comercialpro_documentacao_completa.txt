@@ -2745,5 +2745,41 @@ Sempre que for pedir algo para Codex ou Claude, informe:
 
 "Leia primeiro a pasta docs do projeto ComercialPro e siga as regras documentadas antes de codificar."
 
+======================================================================
+ATUALIZACAO 2026-07-29 - MODULO DIARIO DE VISITA
+======================================================================
 
+Foi implementado o modulo Diario de visita:
+- /diario-visita como entrada com Localizar convenio e Registrar minha visita.
+- /diario-visita/localizar-convenio preservando o localizador MPDFT.
+- /diario-visita/registrar com dashboard por perfil.
+- /diario-visita/registrar/consultores/[consultorId].
+- /diario-visita/registrar/visitas/[visitId].
+- /diario-visita/registrar/gerentes/[managerId].
+- Catalogo compartilhado em src/data/agreement-locations.ts.
+- Servico de dominio em src/services/visit.service.ts.
+- Server actions em src/app/diario-visita/registrar/actions.ts.
+- Migration prisma/migrations/20260729162000_add_visit_diary/migration.sql.
+- Models VisitAssignment e VisitEvent.
+- Enums VisitStatus e VisitEventType.
+- Aviso em /inicio para CONSULTANT com atividades ASSIGNED ou REVISION_REQUESTED.
+
+Documentacao detalhada:
+- docs/modulo-diario-visita/
+
+Validacoes:
+- npx.cmd prisma format OK.
+- npx.cmd prisma validate OK.
+- npx.cmd prisma generate OK.
+- npm run lint OK.
+- npm run build OK.
+
+Atualizacao posterior do Diario de visita:
+- Suporte a fotos opcionais nos relatorios do consultor.
+- Dependencia adicionada: @vercel/blob.
+- Variavel adicionada em .env.example: BLOB_READ_WRITE_TOKEN.
+- Nova migration: prisma/migrations/20260729174500_add_visit_photos/migration.sql.
+- Novo model: VisitPhoto, vinculado a VisitEvent.
+- Nova rota: /api/diario-visita/fotos/[photoId].
+- Fotos sao armazenadas no Vercel Blob privado e visualizadas por rota autenticada.
 

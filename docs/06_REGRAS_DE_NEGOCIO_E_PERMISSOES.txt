@@ -301,3 +301,25 @@ APIs de previsão:
 
 API cron:
 - Apenas chamada autorizada com CRON_SECRET.
+
+======================================================================
+DIARIO DE VISITA
+======================================================================
+
+- CONSULTANT representa o operador do fluxo de visita.
+- REGIONAL_MANAGER representa gerente regional/gerente geral e continua exibido como Superintendente.
+- Nenhum enum de perfil foi alterado.
+- Manager cria atividades apenas para consultores aprovados da propria equipe.
+- Consultant acessa e envia relatorios somente das atividades atribuidas a ele.
+- Manager conclui ou solicita refazer visita somente quando a atividade esta SUBMITTED.
+- Superintendente e Admin acessam registros em modo somente leitura.
+- Todas as transicoes e validacoes ficam centralizadas em src/services/visit.service.ts.
+
+Detalhamento completo em docs/modulo-diario-visita/02_REGRAS_DE_NEGOCIO.txt.
+
+Fotos do Diario de visita:
+- CONSULTANT pode anexar fotos opcionais somente no momento do envio de relatorio.
+- Cada foto pertence a um VisitEvent CONSULTANT_SUBMITTED.
+- Manager, REGIONAL_MANAGER e ADMIN visualizam fotos somente quando tambem podem visualizar o relatorio textual.
+- A rota /api/diario-visita/fotos/[photoId] valida sessao e permissao antes de entregar a imagem privada.
+- BLOB_READ_WRITE_TOKEN deve ficar apenas no servidor.

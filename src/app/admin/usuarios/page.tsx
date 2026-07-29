@@ -15,7 +15,7 @@ const roleLabels: Record<Role, string> = {
   ADMIN: "Administrador",
   CONSULTANT: "Consultor",
   MANAGER: "Gerente",
-  REGIONAL_MANAGER: "Gerente regional",
+  REGIONAL_MANAGER: "Superintendente",
 };
 
 const statusLabels: Record<UserStatus, string> = {
@@ -114,7 +114,7 @@ export default async function AdminUsuariosPage({
                     </div>
                     <div>
                       <dt className="font-semibold text-slate-900">
-                        Gerente regional
+                        Superintendente
                       </dt>
                       <dd className="mt-1">
                         {user.regionalManager

@@ -38,7 +38,7 @@ export default async function RegionalConsultorEditPage({
       <div className="mx-auto max-w-3xl space-y-6">
         <header>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">
-            Gerente regional
+            Superintendente
           </p>
           <h1 className="mt-2 text-3xl font-bold">Editar previsão</h1>
           <p className="mt-2 text-sm text-slate-600">

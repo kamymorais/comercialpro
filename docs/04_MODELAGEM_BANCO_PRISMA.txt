@@ -333,3 +333,38 @@ Não deletar DailyForecast no reset.
 O reset visual acontece porque a aplicação muda a data operacional.
 
 Esse modelo permite histórico futuro sem retrabalho.
+
+======================================================================
+11. MODELAGEM DO DIARIO DE VISITA
+======================================================================
+
+Migration criada:
+- prisma/migrations/20260729162000_add_visit_diary/migration.sql
+
+Novos enums:
+- VisitStatus
+- VisitEventType
+
+Novos models:
+- VisitAssignment
+- VisitEvent
+
+Relacoes adicionadas em User:
+- assignedVisits
+- managedVisits
+- visitEvents
+
+Indices adicionados:
+- VisitAssignment(consultantId, status)
+- VisitAssignment(managerId, status)
+- VisitAssignment(createdAt)
+- VisitEvent(visitAssignmentId, createdAt)
+- VisitEvent(authorId)
+
+Detalhamento completo em docs/modulo-diario-visita/03_MODELAGEM.txt.
+
+Atualizacao de fotos do Diario de visita:
+- Migration prisma/migrations/20260729174500_add_visit_photos/migration.sql.
+- Model VisitPhoto vinculado a VisitEvent.
+- Relacao User.uploadedPhotos.
+- VisitEvent.photos.

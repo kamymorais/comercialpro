@@ -253,3 +253,23 @@ RF079 — Gerente só pode editar consultor vinculado a ele.
 RF080 — Gerente regional pode editar consultores visíveis na sua hierarquia.
 
 RF081 — Admin pode editar tudo.
+
+======================================================================
+11. DIARIO DE VISITA
+======================================================================
+
+RF082 - O sistema deve exibir /diario-visita como pagina inicial do modulo com os cards Localizar convenio e Registrar minha visita.
+
+RF083 - O localizador deve preservar o fluxo de geolocalizacao do MPDFT e usar catalogo compartilhado em src/data/agreement-locations.ts.
+
+RF084 - O gerente deve atribuir atividades de visita somente a consultores aprovados da propria equipe.
+
+RF085 - O consultor deve enviar relatorio obrigatorio em atividades ASSIGNED ou REVISION_REQUESTED.
+
+RF086 - O gerente deve concluir ou solicitar refazer visita somente em atividades SUBMITTED.
+
+RF087 - O historico de eventos de visita deve ser preservado integralmente.
+
+RF088 - Superintendente e Admin devem acessar registros de visita somente para leitura.
+
+Detalhamento completo em docs/modulo-diario-visita/.

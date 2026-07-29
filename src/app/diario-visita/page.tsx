@@ -1,5 +1,6 @@
+import Link from "next/link";
 import { BackToMenuBar } from "@/components/layout/BackToMenuBar";
-import { VisitDiary } from "@/components/visit/VisitDiary";
+import { Card } from "@/components/ui/Card";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import { requireRole } from "@/lib/auth";
 
@@ -16,7 +17,7 @@ export default async function DiarioVisitaPage() {
             </p>
             <h1 className="mt-2 text-3xl font-bold">Diário de visita</h1>
             <p className="mt-2 text-sm text-slate-600">
-              Localize o convênio mais próximo para registrar a visita.
+              Escolha como deseja usar o módulo de visitas.
             </p>
           </div>
           <LogoutButton />
@@ -24,8 +25,43 @@ export default async function DiarioVisitaPage() {
 
         <BackToMenuBar />
 
-        <VisitDiary />
+        <section className="grid gap-4 sm:grid-cols-2">
+          <ModuleCard
+            href="/diario-visita/localizar-convenio"
+            title="Localizar convênio"
+            description="Use a localização do celular para encontrar a unidade do MPDFT mais próxima."
+          />
+          <ModuleCard
+            href="/diario-visita/registrar"
+            title="Registrar minha visita"
+            description="Acompanhe atividades, relatórios, solicitações para refazer visita e conclusões."
+          />
+        </section>
       </div>
     </main>
+  );
+}
+
+function ModuleCard({
+  href,
+  title,
+  description,
+}: {
+  href: string;
+  title: string;
+  description: string;
+}) {
+  return (
+    <Link href={href}>
+      <Card className="flex h-full min-h-40 flex-col justify-between gap-4 transition hover:border-blue-200 hover:bg-blue-50">
+        <div>
+          <h2 className="text-xl font-bold">{title}</h2>
+          <p className="mt-2 text-sm leading-6 text-slate-600">
+            {description}
+          </p>
+        </div>
+        <span className="text-sm font-semibold text-blue-900">Abrir →</span>
+      </Card>
+    </Link>
   );
 }

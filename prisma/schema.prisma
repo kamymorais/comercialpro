@@ -32,6 +32,20 @@ enum ResetStatus {
   ERROR
 }
 
+enum VisitStatus {
+  ASSIGNED
+  SUBMITTED
+  REVISION_REQUESTED
+  COMPLETED
+}
+
+enum VisitEventType {
+  ASSIGNED
+  CONSULTANT_SUBMITTED
+  REVISION_REQUESTED
+  COMPLETED
+}
+
 model User {
   id           String @id @default(cuid())
   fullName     String
@@ -58,8 +72,12 @@ model User {
   rejectedAt DateTime?
 
   sessions         Session[]
-  forecasts        DailyForecast[] @relation("ConsultantForecasts")
-  updatedForecasts DailyForecast[] @relation("ForecastUpdatedBy")
+  forecasts        DailyForecast[]   @relation("ConsultantForecasts")
+  updatedForecasts DailyForecast[]   @relation("ForecastUpdatedBy")
+  assignedVisits   VisitAssignment[] @relation("VisitAssignmentConsultant")
+  managedVisits    VisitAssignment[] @relation("VisitAssignmentManager")
+  visitEvents      VisitEvent[]      @relation("VisitEventAuthor")
+  uploadedPhotos   VisitPhoto[]      @relation("VisitPhotoUploader")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -122,4 +140,78 @@ model ResetLog {
   message         String?
 
   createdAt DateTime @default(now())
+}
+
+model VisitAssignment {
+  id String @id @default(cuid())
+
+  consultantId String
+  consultant   User   @relation("VisitAssignmentConsultant", fields: [consultantId], references: [id])
+
+  managerId String
+  manager   User   @relation("VisitAssignmentManager", fields: [managerId], references: [id])
+
+  agreementCode String
+  agreementName String
+  unitId        String
+  unitName      String
+  unitAddress   String
+  unitLatitude  Float
+  unitLongitude Float
+
+  status      VisitStatus @default(ASSIGNED)
+  assignedAt  DateTime    @default(now())
+  submittedAt DateTime?
+  completedAt DateTime?
+
+  events VisitEvent[]
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([consultantId, status])
+  @@index([managerId, status])
+  @@index([createdAt])
+}
+
+model VisitEvent {
+  id String @id @default(cuid())
+
+  visitAssignmentId String
+  visitAssignment   VisitAssignment @relation(fields: [visitAssignmentId], references: [id])
+
+  authorId String
+  author   User   @relation("VisitEventAuthor", fields: [authorId], references: [id])
+
+  type VisitEventType
+  note String?
+
+  photos VisitPhoto[]
+
+  createdAt DateTime @default(now())
+
+  @@index([visitAssignmentId, createdAt])
+  @@index([authorId])
+}
+
+model VisitPhoto {
+  id String @id @default(cuid())
+
+  visitEventId String
+  visitEvent   VisitEvent @relation(fields: [visitEventId], references: [id])
+
+  uploadedById String
+  uploadedBy   User   @relation("VisitPhotoUploader", fields: [uploadedById], references: [id])
+
+  pathname     String @unique
+  blobUrl      String
+  originalName String
+  contentType  String
+  sizeBytes    Int
+
+  createdAt DateTime @default(now())
+
+  @@index([visitEventId])
+  @@index([uploadedById])
+  @@index([createdAt])
 }

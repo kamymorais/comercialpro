@@ -1,0 +1,44 @@
+# MODULO DIARIO DE VISITA - CONTEXTO
+
+Implementado em 2026-07-29.
+
+Objetivo:
+- Transformar /diario-visita em uma entrada de modulo com duas opcoes:
+  - Localizar convenio.
+  - Registrar minha visita.
+- Preservar o localizador do MPDFT existente.
+- Adicionar atividades de visita com atribuicao, envio de relatorio, pedido para refazer visita, conclusao e historico imutavel de eventos.
+- Permitir fotos opcionais nos relatorios do consultor, preservadas no evento CONSULTANT_SUBMITTED correspondente.
+
+Rotas:
+- /diario-visita
+- /diario-visita/localizar-convenio
+- /diario-visita/registrar
+- /diario-visita/registrar/consultores/[consultorId]
+- /diario-visita/registrar/visitas/[visitId]
+- /diario-visita/registrar/gerentes/[managerId]
+- /api/diario-visita/fotos/[photoId]
+
+Fonte unica de unidades:
+- src/data/agreement-locations.ts
+
+Componentes principais:
+- src/components/visit/AgreementLocator.tsx
+- src/components/visit/VisitAssignmentForm.tsx
+- src/components/visit/VisitActionForms.tsx
+- src/components/visit/VisitList.tsx
+- src/components/visit/VisitStatusBadge.tsx
+- src/components/visit/VisitTimeline.tsx
+- src/components/visit/VisitPhotoUploader.tsx
+- src/components/visit/VisitPhotoGallery.tsx
+
+Servico de dominio:
+- src/services/visit.service.ts
+
+Server actions:
+- src/app/diario-visita/registrar/actions.ts
+
+Armazenamento de fotos:
+- Vercel Blob privado via @vercel/blob.
+- Variavel: BLOB_READ_WRITE_TOKEN.
+- As imagens nunca sao servidas por URL permanente na interface; a visualizacao usa rota autenticada.

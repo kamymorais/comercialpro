@@ -16,6 +16,9 @@ Ordem recomendada para Codex/Claude:
 8. 07_INSTRUCOES_PERMANENTES_CODEX_CLAUDE.txt
 9. 08_CHECKLIST_FINAL_DO_MVP.txt
 
+Modulo complementar:
+- modulo-diario-visita/
+
 Sempre que for pedir algo para Codex ou Claude, informe:
 
 "Leia primeiro a pasta docs do projeto ComercialPro e siga as regras documentadas antes de codificar."

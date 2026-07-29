@@ -36,7 +36,7 @@ export default async function RegionalGerenteDetailPage({
         <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>
             <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">
-              Gerente regional
+              Superintendente
             </p>
             <h1 className="mt-2 text-3xl font-bold">{details.manager.fullName}</h1>
             <p className="mt-2 text-sm text-slate-600">

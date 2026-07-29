@@ -78,7 +78,7 @@ export function CadastroForm({ managers }: CadastroFormProps) {
         >
           <option value="CONSULTANT">Consultor</option>
           <option value="MANAGER">Gerente</option>
-          <option value="REGIONAL_MANAGER">Gerente regional</option>
+          <option value="REGIONAL_MANAGER">Superintendente</option>
         </select>
       </label>
 

@@ -1,0 +1,37 @@
+# MODULO DIARIO DE VISITA - REQUISITOS FUNCIONAIS
+
+RF-DV001 - /diario-visita deve exibir dois cards: Localizar convenio e Registrar minha visita.
+
+RF-DV002 - /diario-visita/localizar-convenio deve preservar selecao de convenio, geolocalizacao do navegador, calculo de unidade mais proxima, exibicao de unidade, quantidade de servidores, endereco, distancia, link de Google Maps e erro de geolocalizacao.
+
+RF-DV003 - O catalogo MPDFT deve ficar centralizado em src/data/agreement-locations.ts e ser usado pelo localizador e pelas validacoes server-side.
+
+RF-DV004 - O gerente deve listar somente consultores aprovados, CONSULTANT, vinculados por managerId.
+
+RF-DV005 - O gerente deve criar atividades para consultores da sua equipe selecionando convenio, unidade e orientacao inicial opcional.
+
+RF-DV006 - O servidor deve validar convenio e unidade contra o catalogo compartilhado.
+
+RF-DV007 - O consultor deve visualizar atividades aguardando visita, atividades para refazer, enviadas para analise e concluidas.
+
+RF-DV008 - O consultor deve enviar relatorio obrigatorio quando a atividade estiver ASSIGNED ou REVISION_REQUESTED.
+
+RF-DV009 - O gerente deve concluir ou solicitar que a visita seja refeita somente quando a atividade estiver SUBMITTED.
+
+RF-DV010 - O historico deve preservar todos os eventos sem substituir mensagens anteriores.
+
+RF-DV011 - /inicio deve exibir aviso para CONSULTANT quando houver atividade ASSIGNED ou REVISION_REQUESTED.
+
+RF-DV012 - REGIONAL_MANAGER, exibido como Superintendente, deve acompanhar gerentes, consultores, atividades e historico em modo somente leitura.
+
+RF-DV013 - ADMIN deve manter acesso ao localizador e ter visao global de registros em modo somente leitura.
+
+RF-DV014 - O consultor pode anexar ate 5 fotos opcionais ao enviar relatorio.
+
+RF-DV015 - Cada foto deve ficar vinculada ao VisitEvent CONSULTANT_SUBMITTED do envio correspondente.
+
+RF-DV016 - Reenvios apos solicitacao para refazer visita devem preservar fotos antigas e registrar novas fotos separadamente.
+
+RF-DV017 - Consultor, gerente responsavel, Superintendente e Admin podem visualizar fotos conforme as mesmas permissoes do relatorio textual.
+
+RF-DV018 - A aplicacao deve continuar aceitando relatorio sem fotos quando BLOB_READ_WRITE_TOKEN nao estiver configurado.

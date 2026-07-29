@@ -1,0 +1,34 @@
+# MODULO DIARIO DE VISITA - FLUXO POR PERFIL
+
+CONSULTANT:
+- Ve atividades atribuidas a ele.
+- Recebe aviso em /inicio quando ha ASSIGNED ou REVISION_REQUESTED.
+- Abre destino, endereco e mapa.
+- Envia relatorio obrigatorio.
+- Pode incluir fotos opcionais no envio do relatorio.
+- Ve historico completo.
+- Nao altera SUBMITTED ou COMPLETED.
+- Nao adiciona nem remove fotos depois do envio.
+
+MANAGER:
+- Ve somente consultores aprovados da sua equipe.
+- Cria atividade para consultor vinculado.
+- Ve atividades abertas, enviadas e concluidas.
+- Conclui ou solicita refazer visita somente quando a atividade esta SUBMITTED.
+- Nao opera atividade concluida nem consultor de outro gerente.
+- Ve fotos dos relatorios de consultores da propria equipe.
+- Nao altera, substitui, exclui ou adiciona fotos.
+
+REGIONAL_MANAGER:
+- Interface apresenta como Superintendente.
+- Ve gerentes aprovados pela regra MVP.
+- Entra no gerente e ve consultores, atividades e historico.
+- Ve fotos dos relatorios no historico.
+- Nao cria, edita, conclui, solicita refazer ou envia relatorio.
+- Nao altera fotos.
+
+ADMIN:
+- Continua acessando o localizador.
+- Acessa visao global de registros.
+- Registro e somente leitura.
+- Ve fotos em modo somente leitura.
