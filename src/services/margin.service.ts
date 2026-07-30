@@ -2,7 +2,13 @@ import {
   MARGIN_PDF_MIME_TYPE,
   MAX_MARGIN_PDF_SIZE_BYTES,
 } from "@/lib/margin/constants";
-import type { MarginUploadFileInfo } from "@/types/margin";
+import type { MarginAgreement, MarginUploadFileInfo } from "@/types/margin";
+
+export const MARGIN_AGREEMENTS: MarginAgreement[] = ["MPDFT", "SIAPE"];
+
+export function isMarginAgreement(value: unknown): value is MarginAgreement {
+  return typeof value === "string" && MARGIN_AGREEMENTS.includes(value as MarginAgreement);
+}
 
 export type MarginPdfValidationResult = {
   valid: boolean;
