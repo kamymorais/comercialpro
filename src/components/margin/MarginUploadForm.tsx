@@ -258,8 +258,7 @@ export function MarginUploadForm() {
         <MarginUploadResult
           status="success"
           message={state.response.message}
-          agreement={state.response.agreement}
-          file={state.response.file}
+                  file={state.response.file}
           extraction={state.response.extraction}
         />
       ) : null}
