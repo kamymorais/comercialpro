@@ -9,14 +9,16 @@ export function parseBrazilianMoneyToCents(value: string | null | undefined): nu
   }
 
   const trimmedValue = value.trim();
-  const isNegative = /^-|\((.*)\)/.test(trimmedValue);
+  // Sinal negativo pode vir antes ("-123,45") ou depois ("123,45-"), formato
+  // comum em contracheques SIAPE.
+  const isNegative = /^-|-$|\((.*)\)/.test(trimmedValue);
   const numericValue = trimmedValue.replace(/\s/g, "").replace(/[^\d,.-]/g, "");
 
   if (!numericValue) {
     return null;
   }
 
-  const unsignedValue = numericValue.replace(/^-/, "");
+  const unsignedValue = numericValue.replace(/^-/, "").replace(/-$/, "");
   const lastCommaIndex = unsignedValue.lastIndexOf(",");
   const lastDotIndex = unsignedValue.lastIndexOf(".");
   let normalizedValue = unsignedValue;

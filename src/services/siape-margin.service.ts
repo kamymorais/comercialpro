@@ -1,10 +1,13 @@
 import { applyPercentToCents, parseBrazilianMoneyToCents } from "@/lib/margin/money";
+import { extractSiapeRubricsFromText } from "@/lib/margin/siapeRubricParser";
 import type {
   MarginExtractionResult,
   MarginRubricEntryType,
   MarginRubricLine,
   SiapeCalculationResult,
+  SiapeCalculationStatus,
   SiapeExtractionReview,
+  SiapeLimitingRule,
   SiapeRubric,
   SiapeRubricCategory,
 } from "@/types/margin";
@@ -12,13 +15,19 @@ import type {
 const DISCOUNT_TOTAL_TOLERANCE_CENTS = 5;
 const ABONO_PREVIDENCE_TOLERANCE_CENTS = 1;
 
+const LOAN_LIMIT_PERCENT = 35;
+const GLOBAL_FACULTATIVE_LIMIT_PERCENT = 40;
+const CARD_LIMIT_PERCENT = 5;
+const TOTAL_DISCOUNT_LIMIT_PERCENT = 70;
+
 export const SIAPE_RUBRIC_CATEGORIES: SiapeRubricCategory[] = [
-  "AUTHORIZED_FIXED_EARNING",
-  "NEGATIVE_ADJUSTMENT",
-  "FACULTATIVE_DISCOUNT",
-  "MANDATORY_DISCOUNT",
-  "UNCLASSIFIED_DISCOUNT",
+  "ELIGIBLE_EARNING",
   "EXCLUDED_EARNING",
+  "MANDATORY_DISCOUNT",
+  "EXISTING_LOAN",
+  "CONSIGNMENT_CARD",
+  "OTHER_FACULTATIVE_CONSIGNMENT",
+  "UNCLASSIFIED_DISCOUNT",
   "MANUAL_REVIEW",
   "IGNORED",
 ];
@@ -36,7 +45,11 @@ function includesAny(normalizedText: string, keywords: string[]): boolean {
   return keywords.some((keyword) => normalizedText.includes(keyword));
 }
 
-const FIXED_EARNING_KEYWORDS = [
+// Verbas remunerat\u00f3rias permanentes que comp\u00f5em a base consign\u00e1vel SIAPE.
+// Lista deliberadamente curta e literal: qualquer coisa fora dela (ex.:
+// "gratifica\u00e7\u00e3o"/"adicional" gen\u00e9ricos) vai para MANUAL_REVIEW em vez de
+// entrar automaticamente na base.
+const ELIGIBLE_EARNING_KEYWORDS = [
   "vencimento basico",
   "vencimento",
   "subsidio",
@@ -45,7 +58,40 @@ const FIXED_EARNING_KEYWORDS = [
   "remuneracao basica",
 ];
 
+// Proventos que a base consign\u00e1vel SIAPE n\u00e3o deve considerar automaticamente
+// (indenizat\u00f3rios, eventuais, tempor\u00e1rios ou vari\u00e1veis).
 const EXCLUDED_EARNING_KEYWORDS = [
+  "diaria",
+  "diarias",
+  "ajuda de custo",
+  "auxilio transporte",
+  "auxilio-transporte",
+  "auxilio alimentacao",
+  "auxilio-alimentacao",
+  "auxilio natalidade",
+  "auxilio funeral",
+  "salario familia",
+  "13 salario",
+  "decimo terceiro",
+  "gratificacao natalina",
+  "adicional de ferias",
+  "1/3 de ferias",
+  "terco de ferias",
+  "um terco de ferias",
+  "servico extraordinario",
+  "hora extra",
+  "horas extras",
+  "adicional noturno",
+  "insalubridade",
+  "periculosidade",
+  "atividade penosa",
+  "verba eventual",
+  "verbas eventuais",
+  "verba temporaria",
+  "verbas temporarias",
+  "temporaria",
+  "retroativo",
+  "retroativos",
   "bonus de eficiencia",
   "bonus eficiencia",
   "cargo de direcao",
@@ -59,50 +105,67 @@ const EXCLUDED_EARNING_KEYWORDS = [
   "sentenca judicial",
   "verba variavel",
   "verbas variaveis",
-  "verba temporaria",
-  "verbas temporarias",
-  "temporaria",
 ];
 
-const NEGATIVE_ADJUSTMENT_KEYWORDS = [
+// Ajustes de sinal amb\u00edguo (podem ou n\u00e3o representar remunera\u00e7\u00e3o mensal
+// permanente). Sempre v\u00e3o para MANUAL_REVIEW: nunca comp\u00f5em a base
+// automaticamente, nem s\u00e3o descartados automaticamente.
+const AMBIGUOUS_ADJUSTMENT_KEYWORDS = [
   "atraso",
   "atrasos",
   "devolucao",
   "devolucoes",
-  "reposicao",
-  "reposicoes",
   "ajuste negativo",
   "acerto negativo",
   "estorno",
 ];
 
-const FACULTATIVE_DISCOUNT_KEYWORDS = [
-  "emprestimo",
-  "consignado",
-  "contrato bancario",
-  "cartao",
+const CONSIGNMENT_CARD_KEYWORDS = [
   "rmc",
   "rcc",
-  "seguro",
+  "cartao consignado de beneficio",
+  "cartao de credito consignado",
+  "cartao consignado",
+  "cartao",
+];
+
+const EXISTING_LOAN_KEYWORDS = [
+  "emprestimo",
+  "financiamento consignado",
+  "contrato bancario consignado",
+  "contrato bancario",
+  "parcela de emprestimo",
+  "consignacao bancaria de emprestimo",
+];
+
+const OTHER_FACULTATIVE_CONSIGNMENT_KEYWORDS = [
   "associacao",
   "associacoes",
   "sindicato",
+  "seguro",
   "previdencia complementar",
   "plano de saude",
-  "saude",
+  "plano odontologico",
   "odontologico",
+  "saude",
   "consignacao",
+  "consignado",
 ];
 
 const MANDATORY_DISCOUNT_KEYWORDS = [
-  "imposto de renda",
-  "irrf",
+  "contribuicao previdenciaria",
   "previdencia oficial",
   "previdenciario",
   "pss",
   "rpps",
   "inss",
+  "irrf",
+  "imposto de renda",
+  "pensao alimenticia",
   "pensao judicial",
+  "reposicao ao erario",
+  "desconto judicial",
+  "decisao judicial",
 ];
 
 const PREVIDENCE_KEYWORDS = [
@@ -113,7 +176,7 @@ const PREVIDENCE_KEYWORDS = [
   "inss",
 ];
 
-const MONEY_PATTERN = /-?\d{1,3}(?:\.\d{3})*,\d{2}|-?\d+,\d{2}/g;
+const MONEY_PATTERN = /-?\d{1,3}(?:\.\d{3})*,\d{2}-?|-?\d+,\d{2}-?/g;
 
 function parseRubricLine(line: MarginRubricLine): {
   code?: string;
@@ -122,19 +185,16 @@ function parseRubricLine(line: MarginRubricLine): {
   entryType: MarginRubricEntryType;
 } {
   const rawLine = line.linha.trim();
-  const code = line.codigo ?? rawLine.match(/^\d{5}/)?.[0];
+  const code = line.codigo ?? rawLine.match(/^\d{3,10}/)?.[0];
   const moneyMatches = rawLine.match(MONEY_PATTERN) ?? [];
   const rawAmount = line.valor ?? moneyMatches.at(-1);
   const amountCents = parseBrazilianMoneyToCents(rawAmount);
-  const withoutCode = code ? rawLine.replace(new RegExp(`^${code}\\s*`), "") : rawLine;
+  const withoutCode = code ? rawLine.replace(new RegExp(`^${code}[\\s-]*`), "") : rawLine;
+  // Remove os valores com uma única passagem do regex: substituir token a
+  // token com .replace(money, ...) corrompe a descrição quando um valor é
+  // substring de outro (ex.: "0,00" dentro de "200,00").
   const description =
-    line.descricao ??
-    moneyMatches.reduce(
-      (currentDescription, money) => currentDescription.replace(money, " "),
-      withoutCode,
-    )
-      .replace(/\s+/g, " ")
-      .trim();
+    line.descricao ?? withoutCode.replace(MONEY_PATTERN, " ").replace(/\s+/g, " ").trim();
 
   return {
     code,
@@ -151,8 +211,10 @@ function inferEntryType(rawLine: string, amountCents: number | null): MarginRubr
     amountCents !== null &&
     (amountCents < 0 ||
       includesAny(normalizedLine, [
-        ...NEGATIVE_ADJUSTMENT_KEYWORDS,
-        ...FACULTATIVE_DISCOUNT_KEYWORDS,
+        ...AMBIGUOUS_ADJUSTMENT_KEYWORDS,
+        ...CONSIGNMENT_CARD_KEYWORDS,
+        ...EXISTING_LOAN_KEYWORDS,
+        ...OTHER_FACULTATIVE_CONSIGNMENT_KEYWORDS,
         ...MANDATORY_DISCOUNT_KEYWORDS,
         "desconto",
       ]))
@@ -207,7 +269,7 @@ function classifyRubric(
         ABONO_PREVIDENCE_TOLERANCE_CENTS
     ) {
       return {
-        category: "AUTHORIZED_FIXED_EARNING",
+        category: "ELIGIBLE_EARNING",
         requiresManualReview: false,
         notes: ["Abono de permanência incluído por equivalência com o desconto previdenciário."],
       };
@@ -222,21 +284,41 @@ function classifyRubric(
     };
   }
 
-  if (includesAny(normalizedDescription, NEGATIVE_ADJUSTMENT_KEYWORDS)) {
+  // Ajustes de atraso/devolução/estorno têm sinal ambíguo quanto a formar
+  // (ou não) a base consignável permanente: nunca entram automaticamente,
+  // sempre ficam pendentes de decisão do operador.
+  if (includesAny(normalizedDescription, AMBIGUOUS_ADJUSTMENT_KEYWORDS)) {
     return {
-      category: "NEGATIVE_ADJUSTMENT",
-      requiresManualReview: false,
-      notes,
+      category: "MANUAL_REVIEW",
+      requiresManualReview: true,
+      notes: [
+        "Ajuste, atraso ou estorno exige confirmação manual sobre se compõe a base consignável.",
+      ],
     };
   }
 
   if (rubric.entryType === "DISCOUNT") {
+    // Ordem importa: "cartão consignado" contém "consignado" e deve ser
+    // reconhecido como CONSIGNMENT_CARD antes de cair no bucket genérico de
+    // outras consignações facultativas.
+    if (includesAny(normalizedDescription, CONSIGNMENT_CARD_KEYWORDS)) {
+      return { category: "CONSIGNMENT_CARD", requiresManualReview: false, notes };
+    }
+
+    if (includesAny(normalizedDescription, EXISTING_LOAN_KEYWORDS)) {
+      return { category: "EXISTING_LOAN", requiresManualReview: false, notes };
+    }
+
     if (includesAny(normalizedDescription, MANDATORY_DISCOUNT_KEYWORDS)) {
       return { category: "MANDATORY_DISCOUNT", requiresManualReview: false, notes };
     }
 
-    if (includesAny(normalizedDescription, FACULTATIVE_DISCOUNT_KEYWORDS)) {
-      return { category: "FACULTATIVE_DISCOUNT", requiresManualReview: false, notes };
+    if (includesAny(normalizedDescription, OTHER_FACULTATIVE_CONSIGNMENT_KEYWORDS)) {
+      return {
+        category: "OTHER_FACULTATIVE_CONSIGNMENT",
+        requiresManualReview: false,
+        notes,
+      };
     }
 
     return {
@@ -251,9 +333,9 @@ function classifyRubric(
       return { category: "EXCLUDED_EARNING", requiresManualReview: false, notes };
     }
 
-    if (includesAny(normalizedDescription, FIXED_EARNING_KEYWORDS)) {
+    if (includesAny(normalizedDescription, ELIGIBLE_EARNING_KEYWORDS)) {
       return {
-        category: "AUTHORIZED_FIXED_EARNING",
+        category: "ELIGIBLE_EARNING",
         requiresManualReview: false,
         notes,
       };
@@ -263,18 +345,28 @@ function classifyRubric(
   return {
     category: "MANUAL_REVIEW",
     requiresManualReview: true,
-    notes: ["Classificação automática insegura. Confira a categoria antes de calcular."],
+    notes: ["Classificação automática insegura. Confira se esta rubrica compõe a base consignável."],
   };
 }
 
-function getPaycheckDiscountTotalCents(extraction: MarginExtractionResult): number | null {
-  return parseBrazilianMoneyToCents(extraction.candidateFields.descontos);
-}
+const NO_RUBRICS_WARNING =
+  "Nenhuma rubrica foi identificada automaticamente. Confira se o PDF possui texto selecionável.";
 
 export function buildSiapeExtractionReview(
   extraction: MarginExtractionResult,
 ): SiapeExtractionReview {
-  const parsedRubrics = extraction.rubricas.map((line, index) => {
+  // A Python Function é a fonte primária de rubricas. Se ela devolver uma
+  // lista vazia mas ainda houver texto extraído, tenta reconstruir as
+  // rubricas a partir do texto bruto como camada extra de segurança, em vez
+  // de devolver silenciosamente uma revisão vazia.
+  const rubricLines =
+    extraction.rubricas.length > 0
+      ? extraction.rubricas
+      : extraction.text.trim().length > 0
+        ? extractSiapeRubricsFromText(extraction.text)
+        : [];
+
+  const parsedRubrics = rubricLines.map((line, index) => {
     const parsed = parseRubricLine(line);
 
     return {
@@ -284,6 +376,7 @@ export function buildSiapeExtractionReview(
       amountCents: Math.abs(parsed.amountCents ?? 0),
       entryType: parsed.entryType,
       sourceSection: line.secaoOrigem,
+      page: line.pagina,
       rawLine: line.linha,
     };
   });
@@ -300,10 +393,19 @@ export function buildSiapeExtractionReview(
     ...classifyRubric(rubric, officialPrevidenceDiscountCents),
   }));
 
+  const warnings = [...extraction.warnings];
+  if (rubrics.length === 0 && !warnings.includes(NO_RUBRICS_WARNING)) {
+    warnings.push(NO_RUBRICS_WARNING);
+  }
+
   return {
     rubrics,
-    paycheckDiscountTotalCents: getPaycheckDiscountTotalCents(extraction),
-    warnings: extraction.warnings,
+    paycheckGrossTotalCents: parseBrazilianMoneyToCents(extraction.candidateFields.bruto),
+    paycheckDiscountTotalCents: parseBrazilianMoneyToCents(
+      extraction.candidateFields.descontos,
+    ),
+    paycheckNetTotalCents: parseBrazilianMoneyToCents(extraction.candidateFields.liquido),
+    warnings,
   };
 }
 
@@ -328,30 +430,70 @@ function emptyRubricsByCategory(): Record<SiapeRubricCategory, SiapeRubric[]> {
   );
 }
 
+function emptyCalculationResult(
+  status: SiapeCalculationStatus,
+  divergences: string[],
+  rubricsByCategory: Record<SiapeRubricCategory, SiapeRubric[]> = emptyRubricsByCategory(),
+  pendingRubrics: SiapeRubric[] = [],
+): SiapeCalculationResult {
+  return {
+    agreement: "SIAPE",
+    status,
+    eligibleBaseCents: 0,
+    loanLimitCents: 0,
+    existingLoansCents: 0,
+    loanBalanceCents: 0,
+    globalFacultativeLimitCents: 0,
+    totalFacultativeConsignmentsCents: 0,
+    globalBalanceCents: 0,
+    cardLimitCents: 0,
+    consignmentCardsCents: 0,
+    otherFacultativeConsignmentsCents: 0,
+    totalDiscountLimitCents: 0,
+    mandatoryDiscountsCents: 0,
+    unclassifiedDiscountsCents: 0,
+    totalCurrentDiscountsCents: 0,
+    seventyPercentBalanceCents: 0,
+    availableLoanMarginCents: 0,
+    limitingRule: "TIE",
+    rubricsByCategory,
+    pendingRubrics,
+    divergences,
+    notes: [],
+  };
+}
+
+// Identifica qual trava determinou o menor saldo (empata em "TIE" quando
+// duas ou mais travas atingem o mesmo valor mínimo).
+function resolveLimitingRule(
+  loanBalanceCents: number,
+  globalBalanceCents: number,
+  seventyPercentBalanceCents: number,
+): SiapeLimitingRule {
+  const minimumCents = Math.min(loanBalanceCents, globalBalanceCents, seventyPercentBalanceCents);
+  const matchingRules: SiapeLimitingRule[] = [];
+
+  if (loanBalanceCents === minimumCents) {
+    matchingRules.push("LOAN_35_PERCENT");
+  }
+  if (globalBalanceCents === minimumCents) {
+    matchingRules.push("GLOBAL_40_PERCENT");
+  }
+  if (seventyPercentBalanceCents === minimumCents) {
+    matchingRules.push("TOTAL_DISCOUNTS_70_PERCENT");
+  }
+
+  return matchingRules.length === 1 ? matchingRules[0] : "TIE";
+}
+
 export function calculateSiapeMargin(params: {
   rubrics: SiapeRubric[];
   paycheckDiscountTotalCents?: number | null;
 }): SiapeCalculationResult {
   if (!Array.isArray(params.rubrics) || params.rubrics.length === 0) {
-    return {
-      agreement: "SIAPE",
-      status: "EXTRACTION_INCOMPLETE",
-      authorizedFixedEarningsCents: 0,
-      negativeAdjustmentsCents: 0,
-      adjustedFixedIncomeCents: 0,
-      totalDiscountsCents: 0,
-      mandatoryDiscountsCents: 0,
-      facultativeDiscountsCents: 0,
-      unclassifiedDiscountsCents: 0,
-      marginACents: 0,
-      marginBCents: 0,
-      availableMarginCents: 0,
-      limitingCalculation: "TIE",
-      rubricsByCategory: emptyRubricsByCategory(),
-      pendingRubrics: [],
-      divergences: ["Não existem rubricas suficientes para calcular."],
-      notes: [],
-    };
+    return emptyCalculationResult("EXTRACTION_INCOMPLETE", [
+      "Não existem rubricas suficientes para calcular.",
+    ]);
   }
 
   for (const rubric of params.rubrics) {
@@ -366,30 +508,77 @@ export function calculateSiapeMargin(params: {
 
   const sumCategory = (category: SiapeRubricCategory) =>
     rubricsByCategory[category].reduce((total, rubric) => total + rubric.amountCents, 0);
-  const authorizedFixedEarningsCents = sumCategory("AUTHORIZED_FIXED_EARNING");
-  const negativeAdjustmentsCents = sumCategory("NEGATIVE_ADJUSTMENT");
+
+  const eligibleBaseCents = sumCategory("ELIGIBLE_EARNING");
   const mandatoryDiscountsCents = sumCategory("MANDATORY_DISCOUNT");
-  const facultativeDiscountsCents = sumCategory("FACULTATIVE_DISCOUNT");
+  const existingLoansCents = sumCategory("EXISTING_LOAN");
+  const consignmentCardsCents = sumCategory("CONSIGNMENT_CARD");
+  const otherFacultativeConsignmentsCents = sumCategory("OTHER_FACULTATIVE_CONSIGNMENT");
   const unclassifiedDiscountsCents = sumCategory("UNCLASSIFIED_DISCOUNT");
-  const totalDiscountsCents =
-    mandatoryDiscountsCents + facultativeDiscountsCents + unclassifiedDiscountsCents;
-  const adjustedFixedIncomeCents =
-    authorizedFixedEarningsCents - negativeAdjustmentsCents;
-  const marginACents =
-    applyPercentToCents(adjustedFixedIncomeCents, 70) - totalDiscountsCents;
-  const marginBCents =
-    applyPercentToCents(adjustedFixedIncomeCents, 40) - facultativeDiscountsCents;
-  const availableMarginCents = Math.min(marginACents, marginBCents);
+
   const pendingRubrics = params.rubrics.filter(
     (rubric) =>
       rubric.requiresManualReview ||
       rubric.category === "MANUAL_REVIEW" ||
       rubric.category === "UNCLASSIFIED_DISCOUNT",
   );
+
+  if (eligibleBaseCents <= 0) {
+    return emptyCalculationResult(
+      "EXTRACTION_INCOMPLETE",
+      ["Não há rubricas elegíveis suficientes para formar a base consignável."],
+      rubricsByCategory,
+      pendingRubrics,
+    );
+  }
+
+  const totalFacultativeConsignmentsCents =
+    existingLoansCents + consignmentCardsCents + otherFacultativeConsignmentsCents;
+  // Descontos não classificados entram na trava dos 70% mas não no limite
+  // facultativo de 40% nem são tratados como empréstimo até serem
+  // reclassificados manualmente.
+  const totalCurrentDiscountsCents =
+    mandatoryDiscountsCents + totalFacultativeConsignmentsCents + unclassifiedDiscountsCents;
+
+  const loanLimitCents = applyPercentToCents(eligibleBaseCents, LOAN_LIMIT_PERCENT);
+  const globalFacultativeLimitCents = applyPercentToCents(
+    eligibleBaseCents,
+    GLOBAL_FACULTATIVE_LIMIT_PERCENT,
+  );
+  const cardLimitCents = applyPercentToCents(eligibleBaseCents, CARD_LIMIT_PERCENT);
+  const totalDiscountLimitCents = applyPercentToCents(
+    eligibleBaseCents,
+    TOTAL_DISCOUNT_LIMIT_PERCENT,
+  );
+
+  const loanBalanceCents = loanLimitCents - existingLoansCents;
+  const globalBalanceCents = globalFacultativeLimitCents - totalFacultativeConsignmentsCents;
+  const seventyPercentBalanceCents = totalDiscountLimitCents - totalCurrentDiscountsCents;
+
+  // As três travas são comparadas simultaneamente com os saldos originais
+  // (que podem ser negativos). Nunca filtrar valores positivos antes do
+  // Math.min: um saldo negativo precisa continuar decidindo o resultado.
+  const rawFinalLoanMarginCents = Math.min(
+    loanBalanceCents,
+    globalBalanceCents,
+    seventyPercentBalanceCents,
+  );
+  const availableLoanMarginCents = Math.max(0, rawFinalLoanMarginCents);
+  const limitingRule = resolveLimitingRule(
+    loanBalanceCents,
+    globalBalanceCents,
+    seventyPercentBalanceCents,
+  );
+
   const divergences: string[] = [];
 
-  if (params.paycheckDiscountTotalCents !== null && params.paycheckDiscountTotalCents !== undefined) {
-    const difference = Math.abs(totalDiscountsCents - params.paycheckDiscountTotalCents);
+  if (
+    params.paycheckDiscountTotalCents !== null &&
+    params.paycheckDiscountTotalCents !== undefined
+  ) {
+    const difference = Math.abs(
+      totalCurrentDiscountsCents - params.paycheckDiscountTotalCents,
+    );
 
     if (difference > DISCOUNT_TOTAL_TOLERANCE_CENTS) {
       divergences.push(
@@ -398,13 +587,9 @@ export function calculateSiapeMargin(params: {
     }
   }
 
-  if (authorizedFixedEarningsCents <= 0) {
-    divergences.push("Não há verbas fixas autorizadas suficientes para calcular.");
-  }
-
-  const status: SiapeCalculationResult["status"] =
-    authorizedFixedEarningsCents <= 0
-      ? "EXTRACTION_INCOMPLETE"
+  const status: SiapeCalculationStatus =
+    rawFinalLoanMarginCents <= 0
+      ? "NO_AVAILABLE_MARGIN"
       : pendingRubrics.length > 0 || divergences.length > 0
         ? "MANUAL_REVIEW"
         : "CALCULATED";
@@ -412,21 +597,28 @@ export function calculateSiapeMargin(params: {
   return {
     agreement: "SIAPE",
     status,
-    authorizedFixedEarningsCents,
-    negativeAdjustmentsCents,
-    adjustedFixedIncomeCents,
-    totalDiscountsCents,
+    eligibleBaseCents,
+    loanLimitCents,
+    existingLoansCents,
+    loanBalanceCents,
+    globalFacultativeLimitCents,
+    totalFacultativeConsignmentsCents,
+    globalBalanceCents,
+    cardLimitCents,
+    consignmentCardsCents,
+    otherFacultativeConsignmentsCents,
+    totalDiscountLimitCents,
     mandatoryDiscountsCents,
-    facultativeDiscountsCents,
     unclassifiedDiscountsCents,
-    marginACents,
-    marginBCents,
-    availableMarginCents,
-    limitingCalculation:
-      marginACents === marginBCents ? "TIE" : marginACents < marginBCents ? "A" : "B",
+    totalCurrentDiscountsCents,
+    seventyPercentBalanceCents,
+    availableLoanMarginCents,
+    limitingRule,
     rubricsByCategory,
     pendingRubrics,
     divergences,
-    notes: ["Margem final: menor resultado entre Margem A e Margem B."],
+    notes: [
+      "Margem final: menor saldo entre a trava de empréstimos (35%), a trava facultativa global (40%) e o espaço restante até o limite geral de descontos (70%).",
+    ],
   };
 }

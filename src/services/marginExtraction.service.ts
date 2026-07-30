@@ -2,6 +2,7 @@ import { spawn } from "node:child_process";
 import path from "node:path";
 import { MARGIN_EXTRACT_ENDPOINT_PATH } from "@/lib/margin/constants";
 import type {
+  MarginAgreement,
   MarginCandidateFields,
   MarginExtractionResult,
   MarginPageText,
@@ -78,16 +79,23 @@ function toExtractionResult(
   };
 }
 
-async function extractWithLocalPython(file: File): Promise<PythonExtractionResponse> {
+async function extractWithLocalPython(
+  file: File,
+  agreement: MarginAgreement,
+): Promise<PythonExtractionResponse> {
   const pdfBuffer = Buffer.from(await file.arrayBuffer());
   const pythonCommand = process.platform === "win32" ? "python" : "python3";
   const scriptPath = path.join(process.cwd(), "api", "margin_extract.py");
 
   return new Promise((resolve, reject) => {
-    const child = spawn(pythonCommand, [scriptPath, "--stdin"], {
-      cwd: process.cwd(),
-      windowsHide: true,
-    });
+    const child = spawn(
+      pythonCommand,
+      [scriptPath, "--stdin", `--agreement=${agreement}`],
+      {
+        cwd: process.cwd(),
+        windowsHide: true,
+      },
+    );
 
     const stdout: Buffer[] = [];
     const stderr: Buffer[] = [];
@@ -133,6 +141,7 @@ async function extractWithLocalPython(file: File): Promise<PythonExtractionRespo
 export async function extractMarginPdfText(params: {
   file: File;
   requestUrl: string;
+  agreement: MarginAgreement;
 }): Promise<MarginExtractionResult> {
   const secret = process.env.MARGIN_EXTRACT_SECRET;
 
@@ -150,6 +159,7 @@ export async function extractMarginPdfText(params: {
   ).toString();
   const formData = new FormData();
   formData.append("file", params.file, params.file.name);
+  formData.append("agreement", params.agreement);
 
   let response: Response;
 
@@ -163,7 +173,7 @@ export async function extractMarginPdfText(params: {
     });
   } catch (error) {
     if (LOCAL_FALLBACK_ENABLED) {
-      const localData = await extractWithLocalPython(params.file);
+      const localData = await extractWithLocalPython(params.file, params.agreement);
       return toExtractionResult(localData, 200);
     }
 
@@ -189,7 +199,7 @@ export async function extractMarginPdfText(params: {
 
   if (!contentType.includes("application/json")) {
     if (LOCAL_FALLBACK_ENABLED) {
-      const localData = await extractWithLocalPython(params.file);
+      const localData = await extractWithLocalPython(params.file, params.agreement);
       return toExtractionResult(localData, 200);
     }
 
@@ -206,7 +216,7 @@ export async function extractMarginPdfText(params: {
     data = (await response.json()) as PythonExtractionResponse;
   } catch {
     if (LOCAL_FALLBACK_ENABLED) {
-      const localData = await extractWithLocalPython(params.file);
+      const localData = await extractWithLocalPython(params.file, params.agreement);
       return toExtractionResult(localData, 200);
     }
 
@@ -219,7 +229,7 @@ export async function extractMarginPdfText(params: {
 
   if (!response.ok) {
     if (response.status === 404 && LOCAL_FALLBACK_ENABLED) {
-      const localData = await extractWithLocalPython(params.file);
+      const localData = await extractWithLocalPython(params.file, params.agreement);
       return toExtractionResult(localData, 200);
     }
 
