@@ -71,13 +71,15 @@ model User {
   approvedAt DateTime?
   rejectedAt DateTime?
 
-  sessions         Session[]
-  forecasts        DailyForecast[]   @relation("ConsultantForecasts")
-  updatedForecasts DailyForecast[]   @relation("ForecastUpdatedBy")
-  assignedVisits   VisitAssignment[] @relation("VisitAssignmentConsultant")
-  managedVisits    VisitAssignment[] @relation("VisitAssignmentManager")
-  visitEvents      VisitEvent[]      @relation("VisitEventAuthor")
-  uploadedPhotos   VisitPhoto[]      @relation("VisitPhotoUploader")
+  sessions                   Session[]
+  passwordResetTokens        PasswordResetToken[] @relation("UserPasswordResetTokens")
+  createdPasswordResetTokens PasswordResetToken[] @relation("AdminCreatedPasswordResetTokens")
+  forecasts                  DailyForecast[]      @relation("ConsultantForecasts")
+  updatedForecasts           DailyForecast[]      @relation("ForecastUpdatedBy")
+  assignedVisits             VisitAssignment[]    @relation("VisitAssignmentConsultant")
+  managedVisits              VisitAssignment[]    @relation("VisitAssignmentManager")
+  visitEvents                VisitEvent[]         @relation("VisitEventAuthor")
+  uploadedPhotos             VisitPhoto[]         @relation("VisitPhotoUploader")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -129,6 +131,27 @@ model Session {
 
   @@index([userId])
   @@index([expiresAt])
+}
+
+model PasswordResetToken {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation("UserPasswordResetTokens", fields: [userId], references: [id], onDelete: Cascade)
+
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  revokedAt DateTime?
+
+  createdByAdminId String?
+  createdByAdmin   User?   @relation("AdminCreatedPasswordResetTokens", fields: [createdByAdminId], references: [id], onDelete: SetNull)
+
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@index([createdByAdminId])
 }
 
 model ResetLog {

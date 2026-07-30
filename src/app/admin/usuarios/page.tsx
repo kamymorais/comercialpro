@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { DeleteUserForm } from "@/components/users/DeleteUserForm";
+import { PasswordResetLinkGenerator } from "@/components/users/PasswordResetLinkGenerator";
 import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { formatDateBR } from "@/lib/dates";
@@ -150,7 +151,11 @@ export default async function AdminUsuariosPage({
                     </div>
                   </dl>
 
-                  <div className="border-t border-slate-100 pt-4">
+                  <div className="space-y-4 border-t border-slate-100 pt-4">
+                    {user.status === "APPROVED" ? (
+                      <PasswordResetLinkGenerator userId={user.id} />
+                    ) : null}
+
                     {isCurrentAdmin ? (
                       <p className="text-sm text-slate-500">
                         Você está logado com este usuário. O próprio usuário não

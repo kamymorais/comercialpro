@@ -2745,6 +2745,33 @@ Sempre que for pedir algo para Codex ou Claude, informe:
 
 "Leia primeiro a pasta docs do projeto ComercialPro e siga as regras documentadas antes de codificar."
 
+==========================================================================================
+ATUALIZACAO 2026-07-29 - REDEFINICAO MANUAL DE SENHA
+==========================================================================================
+
+Foi implementado o fluxo de redefinicao manual de senha por link gerado pelo administrador:
+- Botao "Gerar link para trocar senha" em /admin/usuarios para usuarios APPROVED.
+- Server action administrativa protegida por requireRole(["ADMIN"]).
+- Service src/services/password-reset.service.ts com geracao, validacao e troca de senha.
+- Rota publica /redefinir-senha/[token].
+- Nova senha obrigatoria, minimo de 8 caracteres e confirmacao igual.
+- Sucesso redireciona para /login?senhaRedefinida=1.
+
+Seguranca:
+- O link expira em 1 hora.
+- O link funciona apenas uma vez.
+- O token bruto aparece somente no link copiado pelo administrador.
+- O banco salva apenas hash SHA-256 em PasswordResetToken.tokenHash.
+- Tokens anteriores ativos do usuario sao revogados quando novo link e gerado.
+- Depois da troca, o token e marcado como usado e todas as sessoes ativas do usuario sao revogadas.
+- Nao existe recuperacao automatica por e-mail nesta etapa.
+
+Banco:
+- Model PasswordResetToken.
+- Migration prisma/migrations/20260729193000_add_password_reset_tokens/migration.sql.
+- Relacao do usuario destinatario com onDelete: Cascade.
+- Relacao opcional do admin criador com onDelete: SetNull.
+
 ======================================================================
 ATUALIZACAO 2026-07-29 - MODULO DIARIO DE VISITA
 ======================================================================
@@ -2782,4 +2809,3 @@ Atualizacao posterior do Diario de visita:
 - Novo model: VisitPhoto, vinculado a VisitEvent.
 - Nova rota: /api/diario-visita/fotos/[photoId].
 - Fotos sao armazenadas no Vercel Blob privado e visualizadas por rota autenticada.
-

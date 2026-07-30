@@ -273,3 +273,21 @@ RF087 - O historico de eventos de visita deve ser preservado integralmente.
 RF088 - Superintendente e Admin devem acessar registros de visita somente para leitura.
 
 Detalhamento completo em docs/modulo-diario-visita/.
+
+======================================================================
+12. REDEFINICAO MANUAL DE SENHA
+======================================================================
+
+RF089 - O ADMIN deve poder gerar, em /admin/usuarios, um link individual para troca de senha de usuario aprovado.
+
+RF090 - A opcao "Gerar link para trocar senha" deve aparecer somente em cards de usuarios com status APPROVED, nunca em cadastros pendentes.
+
+RF091 - O link de redefinicao deve expirar em 1 hora e funcionar apenas uma vez.
+
+RF092 - A rota publica /redefinir-senha/[token] deve permitir alterar senha sem login quando o token estiver valido.
+
+RF093 - A nova senha deve ser obrigatoria, possuir no minimo 8 caracteres e coincidir com a confirmacao.
+
+RF094 - Apos redefinir a senha, o sistema deve redirecionar para /login?senhaRedefinida=1 e exibir a mensagem "Senha alterada com sucesso. Entre usando sua nova senha."
+
+RF095 - A redefinicao deve revogar as sessoes ativas do usuario para impedir acesso com dispositivos antigos.

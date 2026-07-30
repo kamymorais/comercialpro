@@ -323,3 +323,18 @@ Fotos do Diario de visita:
 - Manager, REGIONAL_MANAGER e ADMIN visualizam fotos somente quando tambem podem visualizar o relatorio textual.
 - A rota /api/diario-visita/fotos/[photoId] valida sessao e permissao antes de entregar a imagem privada.
 - BLOB_READ_WRITE_TOKEN deve ficar apenas no servidor.
+
+======================================================================
+REDEFINICAO MANUAL DE SENHA
+======================================================================
+
+- Apenas ADMIN autenticado, APPROVED e com role ADMIN pode gerar link de redefinicao de senha.
+- A permissao e validada no servidor pela server action e pelo service de dominio.
+- O link so pode ser gerado para usuario com status APPROVED.
+- Cada link pertence a um unico usuario, expira em 1 hora e funciona apenas uma vez.
+- Ao gerar novo link para o mesmo usuario, tokens anteriores ainda ativos sao revogados.
+- O banco salva apenas tokenHash SHA-256; o token bruto nunca e persistido.
+- A rota /redefinir-senha/[token] e publica, mas a troca de senha so ocorre com token valido, nao usado, nao expirado e nao revogado.
+- A nova senha da redefinicao exige minimo de 8 caracteres e confirmacao igual.
+- Apos a alteracao, o token e marcado como usado e todas as sessoes ativas do usuario sao revogadas.
+- Nao ha recuperacao automatica por e-mail nesta etapa; o administrador copia o link e envia ao usuario por canal externo.

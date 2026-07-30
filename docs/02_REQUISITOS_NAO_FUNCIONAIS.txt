@@ -182,3 +182,17 @@ RNF058 — O projeto deve permitir no futuro:
 - Logs de auditoria mais detalhados.
 
 RNF059 — Mesmo sem implementar tudo agora, a estrutura não deve impedir evolução.
+
+======================================================================
+10. SEGURANCA DA REDEFINICAO DE SENHA
+======================================================================
+
+RNF060 - Links de redefinicao de senha devem ser gerados somente por usuario autenticado, APPROVED e ADMIN, com validacao obrigatoria no servidor.
+
+RNF061 - O token original deve existir somente no link entregue ao administrador. No banco deve ser salvo apenas o hash SHA-256 do token.
+
+RNF062 - Tokens de redefinicao devem expirar em 1 hora, funcionar apenas uma vez e deixar de funcionar quando usados, revogados ou expirados.
+
+RNF063 - A redefinicao de senha nao deve usar recuperacao automatica por e-mail nesta etapa.
+
+RNF064 - O sistema nao deve logar token, senha, passwordHash, cookie ou outros segredos durante geracao, validacao ou troca de senha.

@@ -368,3 +368,39 @@ Atualizacao de fotos do Diario de visita:
 - Model VisitPhoto vinculado a VisitEvent.
 - Relacao User.uploadedPhotos.
 - VisitEvent.photos.
+
+======================================================================
+12. MODELAGEM DE REDEFINICAO MANUAL DE SENHA
+======================================================================
+
+Migration:
+- prisma/migrations/20260729193000_add_password_reset_tokens/migration.sql
+
+Novo model:
+- PasswordResetToken
+
+Campos:
+- id
+- userId
+- tokenHash
+- expiresAt
+- usedAt
+- revokedAt
+- createdByAdminId
+- createdAt
+
+Relacoes adicionadas em User:
+- passwordResetTokens, relacao "UserPasswordResetTokens".
+- createdPasswordResetTokens, relacao "AdminCreatedPasswordResetTokens".
+
+Regras:
+- tokenHash e unico e armazena somente o SHA-256 do token bruto.
+- O token bruto aparece somente no link /redefinir-senha/[token] entregue ao administrador.
+- Se o usuario destinatario for excluido, seus tokens sao apagados com onDelete: Cascade.
+- Se o admin criador for excluido, createdByAdminId fica nulo com onDelete: SetNull.
+
+Indices:
+- PasswordResetToken(userId)
+- PasswordResetToken(tokenHash) unico
+- PasswordResetToken(expiresAt)
+- PasswordResetToken(createdByAdminId)

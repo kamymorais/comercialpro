@@ -16,6 +16,7 @@ const publicRoutePrefixes = [
   "/login",
   "/cadastro",
   "/aguardando-aprovacao",
+  "/redefinir-senha",
   "/api/auth/logout",
 ];
 
