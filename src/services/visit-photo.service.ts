@@ -36,6 +36,10 @@ const EXTENSION_BY_TYPE: Record<VisitPhotoAllowedContentType, string> = {
   "image/png": "png",
   "image/webp": "webp",
 };
+const UNSUPPORTED_HEIC_MESSAGE =
+  "Fotos HEIC/HEIF do iPhone ainda não são aceitas neste envio. Converta para JPEG, PNG ou WebP antes de anexar.";
+const UNSUPPORTED_IMAGE_MESSAGE =
+  "Formato de imagem não aceito. Envie fotos JPEG, PNG ou WebP.";
 
 export function isVisitPhotoStorageConfigured(): boolean {
   return Boolean(process.env.BLOB_READ_WRITE_TOKEN);
@@ -60,8 +64,19 @@ export function validateVisitPhotoFile(input: VisitPhotoUploadTargetInput): stri
     return "Uma das fotos está sem nome de arquivo.";
   }
 
+  const originalName = input.originalName.toLowerCase();
+
+  if (
+    input.contentType === "image/heic" ||
+    input.contentType === "image/heif" ||
+    originalName.endsWith(".heic") ||
+    originalName.endsWith(".heif")
+  ) {
+    return UNSUPPORTED_HEIC_MESSAGE;
+  }
+
   if (!isAllowedVisitPhotoContentType(input.contentType)) {
-    return "Envie apenas fotos JPEG, PNG ou WebP.";
+    return UNSUPPORTED_IMAGE_MESSAGE;
   }
 
   if (!Number.isInteger(input.sizeBytes) || input.sizeBytes <= 0) {

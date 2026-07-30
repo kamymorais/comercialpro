@@ -1,7 +1,7 @@
 "use client";
 
-import type { FormEvent } from "react";
-import { useEffect, useMemo, useRef, useState } from "react";
+import type { ChangeEvent, FormEvent } from "react";
+import { useEffect, useId, useMemo, useRef, useState } from "react";
 import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { put } from "@vercel/blob/client";
@@ -17,6 +17,7 @@ import {
   VISIT_PHOTO_MAX_FILES,
   VISIT_PHOTO_MAX_SIZE_BYTES,
 } from "@/lib/visit-photo-constraints";
+import { cn } from "@/lib/cn";
 import type { UploadedVisitPhotoInput } from "@/services/visit-photo.service";
 
 type VisitPhotoUploaderProps = {
@@ -32,7 +33,11 @@ type SelectedPhoto = {
   progress: number;
 };
 
-const ACCEPT = VISIT_PHOTO_ALLOWED_TYPES.join(",");
+const ACCEPT = "image/*";
+const UNSUPPORTED_HEIC_MESSAGE =
+  "Fotos HEIC/HEIF do iPhone ainda não são aceitas neste envio. Converta para JPEG, PNG ou WebP antes de anexar.";
+const UNSUPPORTED_IMAGE_MESSAGE =
+  "Formato de imagem não aceito. Envie fotos JPEG, PNG ou WebP.";
 
 function formatFileSize(sizeBytes: number) {
   if (sizeBytes >= 1024 * 1024) {
@@ -71,8 +76,23 @@ function hasExpectedImageSignature(bytes: Uint8Array, contentType: string): bool
 }
 
 async function validatePhotoFile(file: File): Promise<string | null> {
+  const fileName = file.name.toLowerCase();
+
+  if (
+    file.type === "image/heic" ||
+    file.type === "image/heif" ||
+    fileName.endsWith(".heic") ||
+    fileName.endsWith(".heif")
+  ) {
+    return UNSUPPORTED_HEIC_MESSAGE;
+  }
+
+  if (!file.type.startsWith("image/")) {
+    return "Envie apenas arquivos de imagem.";
+  }
+
   if (!VISIT_PHOTO_ALLOWED_TYPES.includes(file.type as never)) {
-    return "Envie apenas fotos JPEG, PNG ou WebP.";
+    return UNSUPPORTED_IMAGE_MESSAGE;
   }
 
   if (file.size <= 0) {
@@ -96,15 +116,20 @@ export function VisitPhotoUploader({
   visitId,
   photosEnabled,
 }: VisitPhotoUploaderProps) {
-  const inputRef = useRef<HTMLInputElement>(null);
+  const generatedInputId = useId().replace(/:/g, "");
+  const safeVisitId = visitId.replace(/[^a-zA-Z0-9_-]/g, "_");
+  const inputId = `visit-photos-${safeVisitId}-${generatedInputId}`;
   const router = useRouter();
   const [note, setNote] = useState("");
   const [photos, setPhotos] = useState<SelectedPhoto[]>([]);
+  const photosRef = useRef<SelectedPhoto[]>([]);
   const [message, setMessage] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const hasPhotoErrors = photos.some((photo) => photo.error);
   const isBusy =
     isSubmitting || photos.some((photo) => photo.progress > 0 && photo.progress < 100);
+  const canAddPhotos =
+    photosEnabled && photos.length < VISIT_PHOTO_MAX_FILES && !isBusy;
 
   const selectedCountLabel = useMemo(
     () => `${photos.length} de ${VISIT_PHOTO_MAX_FILES} fotos`,
@@ -112,21 +137,27 @@ export function VisitPhotoUploader({
   );
 
   useEffect(() => {
+    photosRef.current = photos;
+  }, [photos]);
+
+  useEffect(() => {
     return () => {
-      for (const photo of photos) {
+      for (const photo of photosRef.current) {
         URL.revokeObjectURL(photo.previewUrl);
       }
     };
-  }, [photos]);
+  }, []);
 
-  async function handleFiles(files: FileList | null) {
-    if (!files) {
+  async function handlePhotoSelection(event: ChangeEvent<HTMLInputElement>) {
+    const input = event.currentTarget;
+    const incoming = Array.from(input.files ?? []);
+
+    if (incoming.length === 0) {
       return;
     }
 
     setMessage(null);
 
-    const incoming = Array.from(files);
     const remainingSlots = VISIT_PHOTO_MAX_FILES - photos.length;
 
     if (incoming.length > remainingSlots) {
@@ -148,9 +179,7 @@ export function VisitPhotoUploader({
 
     setPhotos((current) => [...current, ...mapped]);
 
-    if (inputRef.current) {
-      inputRef.current.value = "";
-    }
+    input.value = "";
   }
 
   function removePhoto(photoId: string) {
@@ -297,14 +326,28 @@ export function VisitPhotoUploader({
             </h3>
             <p className="mt-1 text-xs text-slate-500">{selectedCountLabel}</p>
           </div>
-          <Button
-            type="button"
-            variant="secondary"
-            disabled={!photosEnabled || photos.length >= VISIT_PHOTO_MAX_FILES || isBusy}
-            onClick={() => inputRef.current?.click()}
+          <input
+            id={inputId}
+            type="file"
+            accept={ACCEPT}
+            multiple
+            disabled={!canAddPhotos}
+            className="peer sr-only"
+            onChange={handlePhotoSelection}
+          />
+          <label
+            htmlFor={inputId}
+            aria-disabled={!canAddPhotos}
+            className={cn(
+              "inline-flex min-h-12 items-center justify-center rounded-lg border border-slate-200 bg-white px-5 py-3 text-sm font-semibold text-slate-900 shadow-sm transition-colors hover:bg-slate-50",
+              "peer-focus-visible:outline peer-focus-visible:outline-2 peer-focus-visible:outline-offset-2 peer-focus-visible:outline-slate-600",
+              canAddPhotos
+                ? "cursor-pointer"
+                : "pointer-events-none cursor-not-allowed opacity-60",
+            )}
           >
             Adicionar fotos
-          </Button>
+          </label>
         </div>
 
         {!photosEnabled ? (
@@ -313,16 +356,6 @@ export function VisitPhotoUploader({
             continua funcionando normalmente.
           </div>
         ) : null}
-
-        <input
-          ref={inputRef}
-          type="file"
-          accept={ACCEPT}
-          capture="environment"
-          multiple
-          className="hidden"
-          onChange={(event) => handleFiles(event.target.files)}
-        />
 
         {photos.length > 0 ? (
           <div className="grid gap-3 sm:grid-cols-2">
