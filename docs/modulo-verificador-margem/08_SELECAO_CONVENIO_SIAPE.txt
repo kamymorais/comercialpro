@@ -1,0 +1,125 @@
+# COMERCIALPRO — VERIFICADOR DE MARGEM — MPDFT E SIAPE
+
+Atualização do módulo Verificador de Margem.
+
+======================================================================
+1. SELEÇÃO DE CONVÊNIO
+======================================================================
+
+Antes do upload do contracheque, o usuário deve selecionar obrigatoriamente o
+convênio:
+
+- MPDFT
+- SIAPE
+
+Ao trocar o convênio, o arquivo selecionado, mensagens e resultado anterior são
+limpos para evitar mistura de resultados.
+
+O backend valida o campo `agreement` por whitelist e rejeita valores fora de
+MPDFT/SIAPE.
+
+======================================================================
+2. MPDFT PRESERVADO
+======================================================================
+
+O convênio MPDFT mantém o fluxo já existente:
+
+- upload do PDF;
+- extração via Python;
+- leitura dos campos candidatos do rodapé;
+- cálculo já existente dos 70%;
+- comparação com a margem informada no PDF;
+- simulação já existente quando há parcela disponível.
+
+Nenhuma regra SIAPE é aplicada ao MPDFT.
+
+======================================================================
+3. SIAPE
+======================================================================
+
+O SIAPE calcula apenas margem consignável com base nas rubricas extraídas e
+conferidas pelo usuário. Não há análise de elegibilidade, crédito, idade,
+vínculo, cargo, renda mínima, prazo, taxa ou aprovação/reprovação.
+
+Categorias de rubricas:
+
+- AUTHORIZED_FIXED_EARNING
+- NEGATIVE_ADJUSTMENT
+- FACULTATIVE_DISCOUNT
+- MANDATORY_DISCOUNT
+- UNCLASSIFIED_DISCOUNT
+- EXCLUDED_EARNING
+- MANUAL_REVIEW
+- IGNORED
+
+Rubricas com classificação insegura ficam pendentes para conferência manual.
+
+======================================================================
+4. VERBAS, DESCONTOS E EXCLUSÕES
+======================================================================
+
+Somente verbas reconhecidas com segurança como fixas autorizadas ou confirmadas
+manualmente entram na base.
+
+Verbas temporárias, variáveis, cargos, comissões, funções gratificadas, bônus de
+eficiência, serviço voluntário, serviço extraordinário temporário e sentenças
+sem prazo definido são tratadas como verbas excluídas quando reconhecidas.
+
+Descontos obrigatórios entram no total de descontos, mas não entram nos
+facultativos. Descontos facultativos entram nos dois totais. Descontos não
+classificados entram no total e geram revisão manual.
+
+O abono de permanência só entra automaticamente quando o valor é equivalente ao
+desconto previdenciário, com tolerância de R$ 0,01. Etapa alimentação sempre
+exige conferência manual.
+
+======================================================================
+5. FÓRMULAS SIAPE
+======================================================================
+
+Os cálculos são executados no TypeScript do servidor, usando centavos inteiros.
+Percentuais monetários são arredondados para o centavo mais próximo.
+
+baseAjustada =
+  verbasFixasAutorizadas - atrasosEAjustesNegativos
+
+Margem A =
+  (baseAjustada × 70%) - totalDeDescontos
+
+Margem B =
+  (baseAjustada × 40%) - descontosFacultativos
+
+Margem disponível =
+  menor valor entre Margem A e Margem B
+
+A implementação usa `Math.min(marginA, marginB)`. Margens negativas são
+preservadas e exibidas como negativas.
+
+======================================================================
+6. CONFERÊNCIA MANUAL
+======================================================================
+
+Depois da extração SIAPE, a tela mostra as rubricas agrupadas por categoria e
+permite alterar categoria e valor antes do cálculo final.
+
+O botão "Calcular margem SIAPE" envia as rubricas revisadas para uma rota
+server-side. O servidor recalcula todos os totais e não confia nos totais do
+navegador.
+
+======================================================================
+7. SEGURANÇA E PRIVACIDADE
+======================================================================
+
+O contracheque não é salvo em banco, Blob ou armazenamento permanente. O módulo
+não cria model Prisma nem migration.
+
+Não registrar logs com nome, CPF, matrícula, texto completo do contracheque,
+valores completos ou conteúdo do PDF.
+
+======================================================================
+8. LIMITAÇÕES DA EXTRAÇÃO
+======================================================================
+
+A extração automática depende de PDF com texto selecionável. PDFs escaneados
+continuam sem OCR. A classificação automática é heurística e conservadora:
+quando houver dúvida, a rubrica fica em revisão manual.

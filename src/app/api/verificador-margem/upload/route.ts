@@ -5,7 +5,8 @@ import {
   extractMarginPdfText,
   MarginExtractionError,
 } from "@/services/marginExtraction.service";
-import { validateMarginPdfFile } from "@/services/margin.service";
+import { isMarginAgreement, validateMarginPdfFile } from "@/services/margin.service";
+import { buildSiapeExtractionReview } from "@/services/siape-margin.service";
 import type { MarginUploadResponse } from "@/types/margin";
 
 const ALLOWED_ROLES: Role[] = [
@@ -55,6 +56,22 @@ export async function POST(request: Request) {
   }
 
   const file = formData.get("file");
+  const agreement = formData.get("agreement");
+
+  if (!isMarginAgreement(agreement)) {
+    return NextResponse.json<MarginUploadResponse>(
+      {
+        success: false,
+        message: "Selecione o convênio.",
+        debug: {
+          stage: "FILE_VALIDATION",
+          status: 400,
+          detail: "Convênio ausente ou inválido.",
+        },
+      },
+      { status: 400 },
+    );
+  }
 
   if (!(file instanceof File)) {
     return NextResponse.json<MarginUploadResponse>(
@@ -98,10 +115,23 @@ export async function POST(request: Request) {
       requestUrl: request.url,
     });
 
+    if (agreement === "SIAPE") {
+      return NextResponse.json<MarginUploadResponse>({
+        success: true,
+        message:
+          "Texto extraído com sucesso. Confira as rubricas antes de calcular a margem SIAPE.",
+        agreement: "SIAPE",
+        file: validation.file,
+        extraction,
+        siapeDraft: buildSiapeExtractionReview(extraction),
+        nextStep: "CALCULATION_AVAILABLE",
+      });
+    }
+
     return NextResponse.json<MarginUploadResponse>({
       success: true,
-      message:
-        "Texto extraído com sucesso. Confira o cálculo da margem abaixo.",
+      message: "Texto extraído com sucesso. Confira o cálculo da margem abaixo.",
+      agreement: "MPDFT",
       file: validation.file,
       extraction,
       nextStep: "CALCULATION_AVAILABLE",

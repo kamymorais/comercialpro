@@ -2,10 +2,15 @@
 
 import { useRef, useState, type ChangeEvent, type FormEvent } from "react";
 import { MarginUploadResult } from "@/components/margin/MarginUploadResult";
+import { SiapeMarginReview } from "@/components/margin/SiapeMarginReview";
 import { Button } from "@/components/ui/Button";
+import { cn } from "@/lib/cn";
 import { formatFileSize } from "@/lib/margin/format";
-import { validateMarginPdfFile } from "@/services/margin.service";
+import { MARGIN_AGREEMENTS, validateMarginPdfFile } from "@/services/margin.service";
 import type {
+  MarginAgreement,
+  MarginMpdftUploadSuccessResponse,
+  MarginSiapeUploadSuccessResponse,
   MarginUploadDebug,
   MarginUploadFileInfo,
   MarginUploadResponse,
@@ -20,18 +25,42 @@ type UploadState =
       debug?: MarginUploadDebug;
     }
   | { status: "loading" }
-  | { status: "success"; response: MarginUploadResponse };
+  | {
+      status: "success";
+      response: MarginMpdftUploadSuccessResponse | MarginSiapeUploadSuccessResponse;
+    };
 
 const GENERIC_ERROR_MESSAGE = "Não foi possível enviar o arquivo agora.";
 
 export function MarginUploadForm() {
   const inputRef = useRef<HTMLInputElement>(null);
+  const [selectedAgreement, setSelectedAgreement] = useState<MarginAgreement | null>(
+    null,
+  );
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [state, setState] = useState<UploadState>({ status: "idle" });
+  const [siapeDraft, setSiapeDraft] = useState<
+    MarginSiapeUploadSuccessResponse["siapeDraft"] | null
+  >(null);
+
+  function resetFileAndResult() {
+    setSelectedFile(null);
+    setState({ status: "idle" });
+    setSiapeDraft(null);
+    if (inputRef.current) {
+      inputRef.current.value = "";
+    }
+  }
+
+  function handleAgreementChange(agreement: MarginAgreement) {
+    setSelectedAgreement(agreement);
+    resetFileAndResult();
+  }
 
   async function handleFileChange(event: ChangeEvent<HTMLInputElement>) {
     const file = event.target.files?.[0] ?? null;
     setSelectedFile(file);
+    setSiapeDraft(null);
 
     if (!file) {
       setState({ status: "idle" });
@@ -56,6 +85,14 @@ export function MarginUploadForm() {
 
     const validation = await validateMarginPdfFile(selectedFile);
 
+    if (!selectedAgreement) {
+      setState({
+        status: "error",
+        message: "Selecione o convênio.",
+      });
+      return;
+    }
+
     if (!validation.valid || !selectedFile) {
       setState({
         status: "error",
@@ -65,9 +102,11 @@ export function MarginUploadForm() {
     }
 
     setState({ status: "loading" });
+    setSiapeDraft(null);
 
     const formData = new FormData();
     formData.append("file", selectedFile);
+    formData.append("agreement", selectedAgreement);
 
     try {
       const response = await fetch("/api/verificador-margem/upload", {
@@ -77,7 +116,7 @@ export function MarginUploadForm() {
 
       const data = (await response.json()) as MarginUploadResponse;
 
-      if (!response.ok || !data.success) {
+      if (!data.success) {
         if (data.debug?.stage && process.env.NODE_ENV === "development") {
           console.log("Erro seguro do Verificador de Margem:", data.debug);
         }
@@ -91,6 +130,18 @@ export function MarginUploadForm() {
         return;
       }
 
+      if (!response.ok) {
+        setState({
+          status: "error",
+          message: GENERIC_ERROR_MESSAGE,
+        });
+        return;
+      }
+
+      if (data.agreement === "SIAPE") {
+        setSiapeDraft(data.siapeDraft);
+      }
+
       setState({ status: "success", response: data });
     } catch {
       setState({ status: "error", message: GENERIC_ERROR_MESSAGE });
@@ -98,11 +149,7 @@ export function MarginUploadForm() {
   }
 
   function handleChooseAnother() {
-    setSelectedFile(null);
-    setState({ status: "idle" });
-    if (inputRef.current) {
-      inputRef.current.value = "";
-    }
+    resetFileAndResult();
   }
 
   const isLoading = state.status === "loading";
@@ -117,6 +164,36 @@ export function MarginUploadForm() {
           Selecione um arquivo PDF com até 4 MB.
         </p>
       </div>
+
+      <fieldset className="space-y-2">
+        <legend className="text-sm font-semibold text-slate-900">
+          Selecione o convênio
+        </legend>
+        <div className="grid gap-2 sm:grid-cols-2">
+          {MARGIN_AGREEMENTS.map((agreement) => (
+            <label
+              key={agreement}
+              className={cn(
+                "flex min-h-12 cursor-pointer items-center justify-center rounded-lg border px-4 py-3 text-sm font-semibold transition",
+                selectedAgreement === agreement
+                  ? "border-blue-900 bg-blue-50 text-blue-950"
+                  : "border-slate-200 bg-white text-slate-700 hover:border-blue-200 hover:bg-blue-50",
+              )}
+            >
+              <input
+                type="radio"
+                name="agreement"
+                value={agreement}
+                checked={selectedAgreement === agreement}
+                onChange={() => handleAgreementChange(agreement)}
+                disabled={isLoading}
+                className="sr-only"
+              />
+              {agreement}
+            </label>
+          ))}
+        </div>
+      </fieldset>
 
       <label
         htmlFor="margin-pdf-input"
@@ -177,13 +254,20 @@ export function MarginUploadForm() {
         />
       ) : null}
 
-      {state.status === "success" ? (
+      {state.status === "success" && state.response.agreement === "MPDFT" ? (
         <MarginUploadResult
           status="success"
           message={state.response.message}
+          agreement={state.response.agreement}
           file={state.response.file}
           extraction={state.response.extraction}
         />
+      ) : null}
+
+      {state.status === "success" &&
+      state.response.agreement === "SIAPE" &&
+      siapeDraft ? (
+        <SiapeMarginReview review={siapeDraft} />
       ) : null}
 
       <div className="flex flex-col gap-3 sm:flex-row">
@@ -191,7 +275,7 @@ export function MarginUploadForm() {
           type="submit"
           className="flex-1"
           loading={isLoading}
-          disabled={!selectedFile}
+          disabled={!selectedFile || !selectedAgreement}
         >
           Enviar para extração
         </Button>
