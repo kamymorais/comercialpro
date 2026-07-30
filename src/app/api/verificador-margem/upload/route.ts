@@ -111,10 +111,10 @@ export async function POST(request: Request) {
 
   try {
     const extraction = await extractMarginPdfText({
-      file,
-      requestUrl: request.url,
-    });
-
+  file,
+  requestUrl: request.url,
+  agreement,
+});
     if (agreement === "SIAPE") {
       return NextResponse.json<MarginUploadResponse>({
         success: true,
