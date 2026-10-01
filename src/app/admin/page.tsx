@@ -62,7 +62,7 @@ export default async function AdminPage() {
           <AdminLinkCard
             href="/admin/usuarios"
             title="Usuários"
-            description="Consultar cadastros e excluir acessos de funcionários desligados."
+            description="Consultar, editar ou excluir cadastros de colaboradores."
           />
           <AdminLinkCard
             href="/admin/previsoes"

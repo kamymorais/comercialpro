@@ -1,6 +1,12 @@
 import { getOperationalDate } from "@/lib/dates";
 import { normalizeMoneyValue } from "@/lib/money";
 import { prisma } from "@/lib/prisma";
+import {
+  normalizeFullName,
+  normalizeUsername,
+  validateFullName,
+  validateUsername,
+} from "@/lib/validation";
 import type { Role, UserStatus } from "@/generated/prisma/client";
 
 export type AdminDashboardSummary = {
@@ -181,4 +187,185 @@ export async function deleteRegisteredUser(adminId: string, userId: string) {
   ]);
 
   return { deletedUserName: targetUser.fullName };
+}
+
+export type AdminEditableUser = {
+  id: string;
+  fullName: string;
+  username: string;
+  role: Role | null;
+  status: UserStatus;
+  managerId: string | null;
+  regionalManagerId: string | null;
+};
+
+export type UpdateRegisteredUserInput = {
+  adminId: string;
+  userId: string;
+  fullName: string;
+  username: string;
+  role: string;
+  managerId?: string | null;
+  regionalManagerId?: string | null;
+};
+
+const editableRoles: Role[] = ["CONSULTANT", "MANAGER", "REGIONAL_MANAGER"];
+
+export async function getAdminEditableUser(
+  userId: string,
+): Promise<AdminEditableUser | null> {
+  return prisma.user.findUnique({
+    where: { id: userId },
+    select: {
+      id: true,
+      fullName: true,
+      username: true,
+      role: true,
+      status: true,
+      managerId: true,
+      regionalManagerId: true,
+    },
+  });
+}
+
+export async function listApprovedRegionalManagers() {
+  return prisma.user.findMany({
+    where: {
+      status: "APPROVED",
+      role: "REGIONAL_MANAGER",
+    },
+    orderBy: [{ fullName: "asc" }, { username: "asc" }],
+    select: {
+      id: true,
+      fullName: true,
+      username: true,
+    },
+  });
+}
+
+export async function updateRegisteredUser(input: UpdateRegisteredUserInput) {
+  const admin = await prisma.user.findFirst({
+    where: {
+      id: input.adminId,
+      role: "ADMIN",
+      status: "APPROVED",
+    },
+    select: { id: true },
+  });
+
+  if (!admin) {
+    throw new AdminServiceError("Administrador não autorizado.");
+  }
+
+  const targetUser = await prisma.user.findUnique({
+    where: { id: input.userId },
+    select: {
+      id: true,
+      role: true,
+      _count: {
+        select: {
+          consultants: { where: { status: "APPROVED" } },
+        },
+      },
+    },
+  });
+
+  if (!targetUser) {
+    throw new AdminServiceError("Usuário não encontrado.");
+  }
+
+  const fullName = normalizeFullName(input.fullName);
+  const fullNameError = validateFullName(fullName);
+  if (fullNameError) {
+    throw new AdminServiceError(fullNameError);
+  }
+
+  const username = normalizeUsername(input.username);
+  const usernameError = validateUsername(username);
+  if (usernameError) {
+    throw new AdminServiceError(usernameError);
+  }
+
+  const usernameOwner = await prisma.user.findUnique({
+    where: { username },
+    select: { id: true },
+  });
+
+  if (usernameOwner && usernameOwner.id !== targetUser.id) {
+    throw new AdminServiceError("Este usuário já está em uso.");
+  }
+
+  // Administradores mantêm o perfil; os demais escolhem entre os perfis operacionais.
+  let role: Role | null = targetUser.role;
+  if (targetUser.role !== "ADMIN") {
+    role = input.role as Role;
+
+    if (!editableRoles.includes(role)) {
+      throw new AdminServiceError("Informe o perfil do usuário.");
+    }
+  }
+
+  const hasActiveConsultants = targetUser._count.consultants > 0;
+  if (
+    targetUser.role === "MANAGER" &&
+    hasActiveConsultants &&
+    role !== "MANAGER"
+  ) {
+    throw new AdminServiceError(
+      "Este gerente possui consultores vinculados. Transfira os consultores para outro gerente antes de alterar o perfil.",
+    );
+  }
+
+  let managerId: string | null = null;
+  if (role === "CONSULTANT") {
+    if (!input.managerId) {
+      throw new AdminServiceError("Selecione o gerente do consultor.");
+    }
+
+    const manager = await prisma.user.findFirst({
+      where: {
+        id: input.managerId,
+        role: "MANAGER",
+        status: "APPROVED",
+      },
+      select: { id: true },
+    });
+
+    if (!manager || manager.id === targetUser.id) {
+      throw new AdminServiceError("Gerente selecionado não está disponível.");
+    }
+
+    managerId = manager.id;
+  }
+
+  let regionalManagerId: string | null = null;
+  if (role === "MANAGER" && input.regionalManagerId) {
+    const regionalManager = await prisma.user.findFirst({
+      where: {
+        id: input.regionalManagerId,
+        role: "REGIONAL_MANAGER",
+        status: "APPROVED",
+      },
+      select: { id: true },
+    });
+
+    if (!regionalManager || regionalManager.id === targetUser.id) {
+      throw new AdminServiceError(
+        "Superintendente selecionado não está disponível.",
+      );
+    }
+
+    regionalManagerId = regionalManager.id;
+  }
+
+  await prisma.user.update({
+    where: { id: targetUser.id },
+    data: {
+      fullName,
+      username,
+      role,
+      managerId,
+      regionalManagerId,
+    },
+  });
 }

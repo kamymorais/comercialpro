@@ -50,8 +50,8 @@ export default async function AdminUsuariosPage({
             </p>
             <h1 className="mt-2 text-3xl font-bold">Usuários</h1>
             <p className="mt-2 text-sm text-slate-600">
-              Consulte usuários cadastrados e exclua acessos de funcionários
-              desligados.
+              Consulte usuários cadastrados, edite dados e gerente, ou exclua
+              acessos de funcionários desligados.
             </p>
           </div>
           <Link className="text-sm font-semibold text-blue-900" href="/admin">
@@ -62,6 +62,12 @@ export default async function AdminUsuariosPage({
         {status === "deleted" ? (
           <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950">
             Cadastro excluído com sucesso.
+          </div>
+        ) : null}
+
+        {status === "updated" ? (
+          <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-950">
+            Cadastro atualizado com sucesso.
           </div>
         ) : null}
 
@@ -152,6 +158,13 @@ export default async function AdminUsuariosPage({
                   </dl>
 
                   <div className="space-y-4 border-t border-slate-100 pt-4">
+                    <Link
+                      href={`/admin/usuarios/${user.id}/editar`}
+                      className="inline-flex min-h-11 w-full items-center justify-center rounded-lg border border-slate-200 bg-white px-4 py-2 text-sm font-semibold text-slate-900 shadow-sm transition-colors hover:bg-slate-50 sm:w-auto"
+                    >
+                      Editar
+                    </Link>
+
                     {user.status === "APPROVED" ? (
                       <PasswordResetLinkGenerator userId={user.id} />
                     ) : null}
