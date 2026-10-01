@@ -6,7 +6,9 @@ import { Input } from "@/components/ui/Input";
 import { formatCentsToBRL, parseBrazilianMoneyToCents } from "@/lib/margin/money";
 import type {
   SiapeCalculationResult,
+  SiapeCalculationStatus,
   SiapeExtractionReview,
+  SiapeLimitingRule,
   SiapeRubric,
   SiapeRubricCategory,
 } from "@/types/margin";
@@ -25,15 +27,35 @@ type EditableRubric = SiapeRubric & {
   amountInput: string;
 };
 
+// Nomes voltados ao operador. Nunca exibir os identificadores internos
+// (ex.: "EXISTING_LOAN") diretamente na tela.
 const CATEGORY_LABELS: Record<SiapeRubricCategory, string> = {
-  AUTHORIZED_FIXED_EARNING: "Verbas fixas autorizadas",
-  NEGATIVE_ADJUSTMENT: "Atrasos e ajustes negativos",
-  FACULTATIVE_DISCOUNT: "Descontos facultativos",
-  MANDATORY_DISCOUNT: "Descontos obrigatórios",
-  UNCLASSIFIED_DISCOUNT: "Descontos não classificados",
-  EXCLUDED_EARNING: "Verbas excluídas",
-  MANUAL_REVIEW: "Rubricas pendentes",
-  IGNORED: "Ignoradas",
+  ELIGIBLE_EARNING: "Verba que compõe a base consignável",
+  EXCLUDED_EARNING: "Verba que não compõe a base",
+  MANDATORY_DISCOUNT: "Desconto obrigatório",
+  EXISTING_LOAN: "Empréstimo consignado existente",
+  CONSIGNMENT_CARD: "Cartão consignado (RMC/RCC)",
+  OTHER_FACULTATIVE_CONSIGNMENT: "Outra consignação facultativa",
+  UNCLASSIFIED_DISCOUNT: "Desconto não classificado",
+  MANUAL_REVIEW: "Pendente de revisão manual",
+  IGNORED: "Ignorada",
+};
+
+const LIMITING_RULE_LABELS: Record<SiapeLimitingRule, string> = {
+  LOAN_35_PERCENT: "Limite de empréstimos de 35%",
+  GLOBAL_40_PERCENT: "Limite global facultativo de 40%",
+  TOTAL_DISCOUNTS_70_PERCENT: "Limite geral de descontos de 70%",
+  TIE: "Mais de uma trava atingiu o mesmo valor",
+};
+
+const STATUS_LABELS: Record<SiapeCalculationStatus, string> = {
+  CALCULATED: "Cálculo concluído, sem rubricas pendentes.",
+  MANUAL_REVIEW:
+    "Cálculo concluído, mas existem rubricas pendentes de revisão manual.",
+  EXTRACTION_INCOMPLETE:
+    "Dados insuficientes para formar a base consignável ou calcular a margem.",
+  NO_AVAILABLE_MARGIN:
+    "Não há margem disponível para nova parcela: uma das travas está zerada ou negativa.",
 };
 
 const CATEGORY_OPTIONS = Object.entries(CATEGORY_LABELS) as Array<
@@ -79,6 +101,29 @@ function MoneyRow({ label, value }: { label: string; value: number }) {
       <dt className="text-slate-600">{label}</dt>
       <dd className="mt-1 font-semibold text-slate-950">
         {formatCentsToBRL(value)}
+      </dd>
+    </div>
+  );
+}
+
+// `null` significa que o valor não foi identificado no PDF, o que é
+// diferente de um zero real. Nunca deve aparecer como "R$ 0,00".
+function NullableMoneyRow({
+  label,
+  value,
+}: {
+  label: string;
+  value: number | null;
+}) {
+  return (
+    <div>
+      <dt className="text-slate-600">{label}</dt>
+      <dd className="mt-1 font-semibold text-slate-950">
+        {value === null ? (
+          <span className="font-normal text-slate-500">Não identificado</span>
+        ) : (
+          formatCentsToBRL(value)
+        )}
       </dd>
     </div>
   );
@@ -151,6 +196,12 @@ export function SiapeMarginReview({ review }: SiapeMarginReviewProps) {
         </p>
       </div>
 
+      <dl className="grid gap-3 rounded-lg border border-slate-200 bg-white p-4 text-sm sm:grid-cols-3">
+        <NullableMoneyRow label="Rendimentos" value={review.paycheckGrossTotalCents} />
+        <NullableMoneyRow label="Descontos" value={review.paycheckDiscountTotalCents} />
+        <NullableMoneyRow label="Líquido" value={review.paycheckNetTotalCents} />
+      </dl>
+
       {review.warnings.length > 0 ? (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800">
           {review.warnings.join(" ")}
@@ -159,8 +210,15 @@ export function SiapeMarginReview({ review }: SiapeMarginReviewProps) {
 
       <div className="space-y-3">
         <h4 className="text-sm font-bold text-slate-950">
-          Conferência das rubricas
+          Conferência das rubricas ({rubrics.length}{" "}
+          {rubrics.length === 1 ? "rubrica encontrada" : "rubricas encontradas"})
         </h4>
+        {rubrics.length === 0 ? (
+          <p className="rounded-lg border border-slate-200 bg-slate-50 px-4 py-3 text-sm text-slate-600">
+            Nenhuma rubrica encontrada. Não é possível calcular a margem sem
+            rubricas conferidas.
+          </p>
+        ) : null}
         <div className="space-y-3">
           {rubrics.map((rubric) => (
             <div
@@ -241,6 +299,7 @@ export function SiapeMarginReview({ review }: SiapeMarginReviewProps) {
         type="button"
         className="w-full sm:w-auto"
         loading={calculation.status === "loading"}
+        disabled={rubrics.length === 0}
         onClick={handleCalculate}
       >
         Calcular margem SIAPE
@@ -264,34 +323,74 @@ function SiapeCalculationResultView({
 }: {
   result: SiapeCalculationResult;
 }) {
+  const blockedRuleLabels = Array.from(
+    new Set(
+      [
+        result.loanBalanceCents <= 0 ? "LOAN_35_PERCENT" : null,
+        result.globalBalanceCents <= 0 ? "GLOBAL_40_PERCENT" : null,
+        result.seventyPercentBalanceCents <= 0 ? "TOTAL_DISCOUNTS_70_PERCENT" : null,
+      ].filter((rule): rule is SiapeLimitingRule => rule !== null),
+    ),
+  );
+
   return (
     <section className="space-y-4 rounded-lg border border-emerald-200 bg-emerald-50 px-4 py-4 text-sm text-emerald-950">
       <div>
         <h4 className="font-semibold">Resultado SIAPE</h4>
-        <p className="mt-2">
-          Margem final: menor resultado entre Margem A e Margem B.
-        </p>
+        <p className="mt-2 font-semibold">{STATUS_LABELS[result.status]}</p>
       </div>
 
       <dl className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-        <MoneyRow label="Verbas fixas autorizadas" value={result.authorizedFixedEarningsCents} />
-        <MoneyRow label="Atrasos e ajustes negativos" value={result.negativeAdjustmentsCents} />
-        <MoneyRow label="Base de renda considerada" value={result.adjustedFixedIncomeCents} />
-        <MoneyRow label="Total de descontos" value={result.totalDiscountsCents} />
+        <MoneyRow label="Base consignável SIAPE" value={result.eligibleBaseCents} />
+        <MoneyRow label="Limite de empréstimos — 35%" value={result.loanLimitCents} />
+        <MoneyRow label="Empréstimos já utilizados" value={result.existingLoansCents} />
+        <MoneyRow label="Saldo de empréstimos" value={result.loanBalanceCents} />
+        <MoneyRow
+          label="Limite global facultativo — 40%"
+          value={result.globalFacultativeLimitCents}
+        />
+        <MoneyRow
+          label="Total facultativo utilizado"
+          value={result.totalFacultativeConsignmentsCents}
+        />
+        <MoneyRow label="Saldo global" value={result.globalBalanceCents} />
+        <MoneyRow label="Limite de cartão — 5%" value={result.cardLimitCents} />
+        <MoneyRow label="Cartão consignado utilizado" value={result.consignmentCardsCents} />
+        <MoneyRow
+          label="Limite geral de descontos — 70%"
+          value={result.totalDiscountLimitCents}
+        />
         <MoneyRow label="Descontos obrigatórios" value={result.mandatoryDiscountsCents} />
-        <MoneyRow label="Descontos facultativos" value={result.facultativeDiscountsCents} />
-        <MoneyRow label="Descontos não classificados" value={result.unclassifiedDiscountsCents} />
-        <MoneyRow label="Margem A - cálculo dos 70%" value={result.marginACents} />
-        <MoneyRow label="Margem B - cálculo dos 40%" value={result.marginBCents} />
-        <MoneyRow label="Margem final disponível" value={result.availableMarginCents} />
+        <MoneyRow
+          label="Total de consignações"
+          value={result.totalFacultativeConsignmentsCents}
+        />
+        <MoneyRow
+          label="Descontos não classificados"
+          value={result.unclassifiedDiscountsCents}
+        />
+        <MoneyRow label="Total atual de descontos" value={result.totalCurrentDiscountsCents} />
+        <MoneyRow label="Espaço restante até 70%" value={result.seventyPercentBalanceCents} />
+        <MoneyRow
+          label="Margem final disponível para nova parcela"
+          value={result.availableLoanMarginCents}
+        />
       </dl>
 
       <p className="font-semibold">
-        Cálculo limitador:{" "}
-        {result.limitingCalculation === "TIE"
-          ? "Margem A e Margem B iguais"
-          : `Margem ${result.limitingCalculation}`}
+        Regra que limitou a margem: {LIMITING_RULE_LABELS[result.limitingRule]}
       </p>
+
+      {blockedRuleLabels.length > 0 ? (
+        <div className="rounded-lg border border-red-200 bg-red-50 px-3 py-2 text-red-800">
+          <p className="font-semibold">Trava(s) sem saldo disponível:</p>
+          <ul className="mt-1 list-inside list-disc">
+            {blockedRuleLabels.map((rule) => (
+              <li key={rule}>{LIMITING_RULE_LABELS[rule]}</li>
+            ))}
+          </ul>
+        </div>
+      ) : null}
 
       {result.divergences.length > 0 ? (
         <div className="rounded-lg border border-amber-200 bg-amber-50 px-3 py-2 text-amber-900">
@@ -301,7 +400,7 @@ function SiapeCalculationResultView({
 
       {result.pendingRubrics.length > 0 ? (
         <div>
-          <h5 className="font-semibold">Rubricas pendentes de análise manual</h5>
+          <h5 className="font-semibold">Rubricas pendentes de revisão</h5>
           <ul className="mt-2 space-y-1">
             {result.pendingRubrics.map((rubric) => (
               <li key={rubric.id}>
@@ -312,9 +411,13 @@ function SiapeCalculationResultView({
         </div>
       ) : null}
 
+      <p className="font-semibold">
+        A margem final representa o valor máximo aproximado da nova parcela
+        mensal de empréstimo.
+      </p>
       <p>
-        A margem final representa o valor máximo aproximado da parcela mensal, e
-        não o valor total do empréstimo.
+        A base SIAPE pode ser diferente do valor bruto e do valor líquido do
+        contracheque.
       </p>
     </section>
   );
