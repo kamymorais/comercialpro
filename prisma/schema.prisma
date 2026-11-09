@@ -286,6 +286,7 @@ model LostOperation {
   author   User   @relation("LostOperationAuthor", fields: [authorId], references: [id])
 
   clientName     String
+  operationValue Decimal? @db.Decimal(12, 2)
   agency         String
   competitorBank String
   rate           Decimal @db.Decimal(7, 4)

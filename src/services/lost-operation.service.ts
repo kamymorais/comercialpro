@@ -15,6 +15,7 @@ const MAX_RATE = 100;
 
 export type LostOperationInput = {
   clientName: unknown;
+  operationValue: unknown;
   agency: unknown;
   competitorBank: unknown;
   rate: unknown;
@@ -28,6 +29,7 @@ export type LostOperationView = {
   authorRole: Role | null;
   managerName: string | null;
   clientName: string;
+  operationValue: number | null;
   agency: string;
   competitorBank: string;
   rate: number;
@@ -87,9 +89,26 @@ export function parseRateInput(value: unknown): number {
   return Number(rate.toFixed(4));
 }
 
+function parseOperationValue(value: unknown): number {
+  const raw = typeof value === "string" ? value : String(value ?? "");
+  let normalized = raw.replace(/R\$|\s/gi, "");
+  if (normalized.includes(",")) {
+    normalized = normalized.replace(/\./g, "").replace(",", ".");
+  } else if (/\.\d{3}(\.|$)/.test(normalized) || (normalized.match(/\./g) ?? []).length > 1) {
+    normalized = normalized.replace(/\./g, "");
+  }
+
+  const amount = Number(normalized);
+  if (!normalized || !Number.isFinite(amount) || amount < 0 || amount > 9_999_999_999.99) {
+    throw new LostOperationError("Informe um valor de operação válido.");
+  }
+  return Number(amount.toFixed(2));
+}
+
 function parseLostOperationInput(input: LostOperationInput) {
   return {
     clientName: readText(input.clientName, "o nome do cliente"),
+    operationValue: parseOperationValue(input.operationValue),
     agency: readText(input.agency, "o órgão"),
     competitorBank: readText(input.competitorBank, "o banco concorrente"),
     rate: parseRateInput(input.rate),
@@ -121,6 +140,7 @@ const lostOperationSelect = {
   id: true,
   authorId: true,
   clientName: true,
+  operationValue: true,
   agency: true,
   competitorBank: true,
   rate: true,
@@ -151,6 +171,7 @@ function toView(
     authorRole: record.author.role,
     managerName: record.author.manager?.fullName ?? null,
     clientName: record.clientName,
+    operationValue: record.operationValue === null ? null : Number(record.operationValue),
     agency: record.agency,
     competitorBank: record.competitorBank,
     rate: Number(record.rate),

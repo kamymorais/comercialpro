@@ -6,6 +6,7 @@ export function LostOperationForm({ action, operation, error }: { action: (formD
     {operation ? <input type="hidden" name="id" value={operation.id} /> : null}
     {error ? <p role="alert" className="rounded-lg bg-red-50 p-3 text-sm text-red-800">{error}</p> : null}
     <Field label="Nome do cliente" name="clientName" defaultValue={operation?.clientName} />
+    <Field label="Valor da operação (R$)" name="operationValue" inputMode="decimal" placeholder="Ex.: 10.000,00" defaultValue={operation?.operationValue?.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 })} />
     <Field label="Órgão" name="agency" defaultValue={operation?.agency} />
     <Field label="Banco concorrente" name="competitorBank" defaultValue={operation?.competitorBank} />
     <Field label="Taxa (%)" name="rate" inputMode="decimal" placeholder="Ex.: 1,85" defaultValue={operation?.rate.toString().replace(".", ",")} />

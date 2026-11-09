@@ -25,6 +25,7 @@ function logOperationSaveFailure(action: string, error: unknown) {
 function formInput(formData: FormData): LostOperationInput {
   return {
     clientName: formData.get("clientName"),
+    operationValue: formData.get("operationValue"),
     agency: formData.get("agency"),
     competitorBank: formData.get("competitorBank"),
     rate: formData.get("rate"),
