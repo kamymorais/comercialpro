@@ -1,6 +1,7 @@
 import { ForecastForm } from "@/components/forecast/ForecastForm";
 import { ForecastSummaryCard } from "@/components/forecast/ForecastSummaryCard";
 import { BackToMenuBar } from "@/components/layout/BackToMenuBar";
+import { PushNotificationToggle } from "@/components/push/PushNotificationToggle";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import { requireRole } from "@/lib/auth";
 import { getConsultantForecast } from "@/services/forecast.service";
@@ -31,6 +32,9 @@ export default async function ConsultorPage({
             <p className="mt-2 text-sm text-slate-600">
               Registre sua previsão de pagamentos do ciclo atual.
             </p>
+            <div className="mt-3">
+              <PushNotificationToggle />
+            </div>
           </div>
           <LogoutButton />
         </header>

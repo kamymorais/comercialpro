@@ -1,6 +1,7 @@
 import { MarginExtractionViewer } from "@/components/margin/MarginExtractionViewer";
 import { formatFileSize } from "@/lib/margin/format";
 import type {
+  MarginAgreement,
   MarginExtractionResult,
   MarginUploadDebug,
   MarginUploadFileInfo,
@@ -9,6 +10,7 @@ import type {
 type MarginUploadResultProps = {
   status: "error" | "success";
   message: string;
+  agreement?: MarginAgreement;
   file?: MarginUploadFileInfo;
   extraction?: MarginExtractionResult;
   debug?: MarginUploadDebug;
@@ -17,6 +19,7 @@ type MarginUploadResultProps = {
 export function MarginUploadResult({
   status,
   message,
+  agreement,
   file,
   extraction,
   debug,
@@ -44,7 +47,9 @@ export function MarginUploadResult({
 
   return (
     <div className="space-y-4">
-      {extraction ? <MarginExtractionViewer extraction={extraction} /> : null}
+      {agreement !== "SIAPE" && extraction ? (
+        <MarginExtractionViewer extraction={extraction} />
+      ) : null}
     </div>
   );
 }

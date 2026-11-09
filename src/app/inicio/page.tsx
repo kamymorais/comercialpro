@@ -77,6 +77,11 @@ export default async function InicioPage() {
             description="Localize convênios e acompanhe atividades de visita."
             badge={visitNotice?.total}
           />
+          <MenuCard
+            href="/operacao-perdida"
+            title="Operação perdida"
+            description="Registre operações fechadas com bancos concorrentes e acompanhe os resultados."
+          />
         </section>
       </div>
     </main>

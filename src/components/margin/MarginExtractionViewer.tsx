@@ -1,22 +1,12 @@
 import { LoanSimulation } from "@/components/margin/LoanSimulation";
-import type { MarginCandidateFields, MarginExtractionResult } from "@/types/margin";
+import { calculateMpdftMargin } from "@/lib/margin/mpdft";
+import type { MarginExtractionResult } from "@/types/margin";
 
 type MarginExtractionViewerProps = {
   extraction: MarginExtractionResult;
 };
 
-type MarginCalculation = {
-  gross: number;
-  discounts: number;
-  pdfMargin: number;
-  committedPercent: number;
-  seventyPercentMargin: number;
-  availableInstallment: number;
-  status: "AVAILABLE" | "NEGATIVE_PDF_MARGIN" | "NEGATIVE_SEVENTY_MARGIN";
-};
-
 const COMMITMENT_LIMIT_PERCENT = 70;
-const COMMITMENT_LIMIT_RATIO = COMMITMENT_LIMIT_PERCENT / 100;
 
 const currencyFormatter = new Intl.NumberFormat("pt-BR", {
   style: "currency",
@@ -28,83 +18,10 @@ const percentFormatter = new Intl.NumberFormat("pt-BR", {
   maximumFractionDigits: 2,
 });
 
-function parseBrazilianMoney(value?: string): number | null {
-  if (!value) {
-    return null;
-  }
-
-  const numericValue = value.replace(/\s/g, "").replace(/[^\d,.-]/g, "");
-
-  if (!numericValue) {
-    return null;
-  }
-
-  const lastCommaIndex = numericValue.lastIndexOf(",");
-  const lastDotIndex = numericValue.lastIndexOf(".");
-  let normalizedValue = numericValue;
-
-  if (lastCommaIndex > -1 && lastDotIndex > -1) {
-    const decimalSeparator = lastCommaIndex > lastDotIndex ? "," : ".";
-    const thousandsSeparator = decimalSeparator === "," ? "." : ",";
-
-    normalizedValue = numericValue
-      .replaceAll(thousandsSeparator, "")
-      .replace(decimalSeparator, ".");
-  } else if (lastCommaIndex > -1) {
-    normalizedValue = numericValue.replaceAll(".", "").replace(",", ".");
-  } else if (lastDotIndex > -1) {
-    const decimalDigits = numericValue.length - lastDotIndex - 1;
-    normalizedValue =
-      decimalDigits === 2 ? numericValue : numericValue.replaceAll(".", "");
-  }
-
-  const parsedValue = Number(normalizedValue);
-
-  return Number.isFinite(parsedValue) ? parsedValue : null;
-}
-
-function calculateMargin(
-  candidateFields: MarginCandidateFields,
-): MarginCalculation | null {
-  const gross = parseBrazilianMoney(candidateFields.bruto);
-  const discounts = parseBrazilianMoney(candidateFields.descontos);
-  const pdfMargin = parseBrazilianMoney(candidateFields.margemPdf);
-
-  if (
-    gross === null ||
-    discounts === null ||
-    pdfMargin === null ||
-    gross <= 0 ||
-    discounts < 0
-  ) {
-    return null;
-  }
-
-  const seventyPercentMargin = gross * COMMITMENT_LIMIT_RATIO - discounts;
-  const status =
-    seventyPercentMargin < 0
-      ? "NEGATIVE_SEVENTY_MARGIN"
-      : pdfMargin < 0
-        ? "NEGATIVE_PDF_MARGIN"
-        : "AVAILABLE";
-
-  return {
-    gross,
-    discounts,
-    pdfMargin,
-    committedPercent: (discounts / gross) * 100,
-    seventyPercentMargin,
-    availableInstallment: status === "AVAILABLE"
-      ? Math.min(pdfMargin, seventyPercentMargin)
-      : 0,
-    status,
-  };
-}
-
 export function MarginExtractionViewer({
   extraction,
 }: MarginExtractionViewerProps) {
-  const marginCalculation = calculateMargin(extraction.candidateFields);
+  const marginCalculation = calculateMpdftMargin(extraction.candidateFields);
 
   return (
     <div className="space-y-4">

@@ -18,6 +18,7 @@ Ordem recomendada para Codex/Claude:
 
 Modulo complementar:
 - modulo-diario-visita/
+- modulo-verificador-margem/
 
 Sempre que for pedir algo para Codex ou Claude, informe:
 

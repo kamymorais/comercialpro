@@ -4,7 +4,6 @@ import {
   getAgreementOptions,
   type AgreementLocation,
 } from "@/data/agreement-locations";
-import { canManagerAccessConsultant } from "@/lib/permissions";
 import { prisma } from "@/lib/prisma";
 import {
   createVisitPhotoUploadTargets,
@@ -95,6 +94,7 @@ export type ManagerVisitConsultant = {
 };
 
 export type ManagerVisitDashboard = {
+  summary: VisitSummary;
   consultants: ManagerVisitConsultant[];
 };
 
@@ -353,12 +353,85 @@ async function findVisitById(visitId: string) {
   });
 }
 
+async function findVisibleVisitByViewer(params: {
+  viewerId: string;
+  viewerRole: Role;
+  visitId: string;
+}) {
+  if (params.viewerRole === "ADMIN") {
+    return findVisitById(params.visitId);
+  }
+
+  if (params.viewerRole === "CONSULTANT") {
+    return prisma.visitAssignment.findFirst({
+      where: {
+        id: params.visitId,
+        consultantId: params.viewerId,
+      },
+      select: visitWithRelationsSelect,
+    });
+  }
+
+  if (params.viewerRole === "MANAGER") {
+    return prisma.visitAssignment.findFirst({
+      where: {
+        id: params.visitId,
+        managerId: params.viewerId,
+        consultant: {
+          role: "CONSULTANT",
+          status: "APPROVED",
+          managerId: params.viewerId,
+        },
+      },
+      select: visitWithRelationsSelect,
+    });
+  }
+
+  if (params.viewerRole === "REGIONAL_MANAGER") {
+    return prisma.visitAssignment.findFirst({
+      where: {
+        id: params.visitId,
+        manager: {
+          role: "MANAGER",
+          status: "APPROVED",
+        },
+      },
+      select: visitWithRelationsSelect,
+    });
+  }
+
+  return null;
+}
+
+async function findManagerVisitForOperation(params: {
+  managerId: string;
+  visitId: string;
+}) {
+  return prisma.visitAssignment.findFirst({
+    where: {
+      id: params.visitId,
+      managerId: params.managerId,
+      consultant: {
+        role: "CONSULTANT",
+        status: "APPROVED",
+        managerId: params.managerId,
+      },
+    },
+    select: visitWithRelationsSelect,
+  });
+}
+
 async function assertManagerCanUseConsultant(params: {
   managerId: string;
   consultantId: string;
 }) {
-  const consultant = await prisma.user.findUnique({
-    where: { id: params.consultantId },
+  const consultant = await prisma.user.findFirst({
+    where: {
+      id: params.consultantId,
+      role: "CONSULTANT",
+      status: "APPROVED",
+      managerId: params.managerId,
+    },
     select: {
       id: true,
       fullName: true,
@@ -370,88 +443,13 @@ async function assertManagerCanUseConsultant(params: {
   });
 
   if (!consultant) {
-    throw new VisitDiaryError("NOT_FOUND", "Consultor não encontrado.");
-  }
-
-  if (
-    consultant.role !== "CONSULTANT" ||
-    consultant.status !== "APPROVED" ||
-    !canManagerAccessConsultant(params.managerId, consultant.managerId)
-  ) {
     throw new VisitDiaryError(
-      "FORBIDDEN",
-      "Você não tem permissão para acessar este consultor.",
+      "NOT_FOUND",
+      "Consultor não encontrado ou não vinculado à sua equipe.",
     );
   }
 
   return consultant;
-}
-
-function assertManagerCanOperateVisit(params: {
-  visit: NonNullable<VisitRecord>;
-  managerId: string;
-}) {
-  if (
-    params.visit.managerId !== params.managerId ||
-    params.visit.consultant.role !== "CONSULTANT" ||
-    params.visit.consultant.status !== "APPROVED" ||
-    params.visit.consultant.managerId !== params.managerId
-  ) {
-    throw new VisitDiaryError(
-      "FORBIDDEN",
-      "Você não tem permissão para alterar esta atividade.",
-    );
-  }
-}
-
-function assertVisitVisible(params: {
-  visit: NonNullable<VisitRecord>;
-  viewerId: string;
-  viewerRole: Role;
-}) {
-  if (params.viewerRole === "ADMIN") {
-    return;
-  }
-
-  if (params.viewerRole === "CONSULTANT") {
-    if (params.visit.consultantId === params.viewerId) {
-      return;
-    }
-
-    throw new VisitDiaryError(
-      "FORBIDDEN",
-      "Você não tem permissão para acessar esta atividade.",
-    );
-  }
-
-  if (params.viewerRole === "MANAGER") {
-    if (
-      params.visit.managerId === params.viewerId &&
-      params.visit.consultant.role === "CONSULTANT" &&
-      params.visit.consultant.status === "APPROVED" &&
-      params.visit.consultant.managerId === params.viewerId
-    ) {
-      return;
-    }
-
-    throw new VisitDiaryError(
-      "FORBIDDEN",
-      "Você não tem permissão para acessar esta atividade.",
-    );
-  }
-
-  if (
-    params.viewerRole === "REGIONAL_MANAGER" &&
-    params.visit.manager.role === "MANAGER" &&
-    params.visit.manager.status === "APPROVED"
-  ) {
-    return;
-  }
-
-  throw new VisitDiaryError(
-    "FORBIDDEN",
-    "Você não tem permissão para acessar esta atividade.",
-  );
 }
 
 function assertRequiredStatus(
@@ -522,21 +520,42 @@ export function getVisitMapsUrl(visit: Pick<VisitListItem, "unitLatitude" | "uni
 export async function getManagerVisitDashboard(
   managerId: string,
 ): Promise<ManagerVisitDashboard> {
-  const consultants = await prisma.user.findMany({
-    where: { managerId, role: "CONSULTANT", status: "APPROVED" },
-    orderBy: [{ fullName: "asc" }, { username: "asc" }],
-    select: {
-      id: true,
-      fullName: true,
-      username: true,
-      assignedVisits: {
-        where: { managerId },
-        select: { status: true },
+  const [consultants, scopedVisits] = await Promise.all([
+    prisma.user.findMany({
+      where: { managerId, role: "CONSULTANT", status: "APPROVED" },
+      orderBy: [{ fullName: "asc" }, { username: "asc" }],
+      select: {
+        id: true,
+        fullName: true,
+        username: true,
+        assignedVisits: {
+          where: {
+            managerId,
+            consultant: {
+              role: "CONSULTANT",
+              status: "APPROVED",
+              managerId,
+            },
+          },
+          select: { status: true },
+        },
       },
-    },
-  });
+    }),
+    prisma.visitAssignment.findMany({
+      where: {
+        managerId,
+        consultant: {
+          role: "CONSULTANT",
+          status: "APPROVED",
+          managerId,
+        },
+      },
+      select: { status: true },
+    }),
+  ]);
 
   return {
+    summary: buildSummary(scopedVisits),
     consultants: consultants.map((consultant) => ({
       id: consultant.id,
       fullName: consultant.fullName,
@@ -640,13 +659,11 @@ export async function getVisitAssignmentDetails(params: {
   viewerRole: Role;
   visitId: string;
 }): Promise<VisitAssignmentDetails> {
-  const visit = await findVisitById(params.visitId);
+  const visit = await findVisibleVisitByViewer(params);
 
   if (!visit) {
     throw new VisitDiaryError("NOT_FOUND", "Atividade não encontrada.");
   }
-
-  assertVisitVisible({ ...params, visit });
 
   return mapVisitToDetails(visit);
 }
@@ -660,7 +677,13 @@ export async function submitConsultantVisitReport(params: {
   const note = normalizeNote(params.note, true);
   const photos = params.photos ?? [];
   validateUploadedPhotos(photos);
-  const visit = await findVisitById(params.visitId);
+  const visit = await prisma.visitAssignment.findFirst({
+    where: {
+      id: params.visitId,
+      consultantId: params.consultantId,
+    },
+    select: visitWithRelationsSelect,
+  });
 
   if (!visit) {
     throw new VisitDiaryError("NOT_FOUND", "Atividade não encontrada.");
@@ -721,7 +744,13 @@ export async function prepareConsultantVisitPhotoUploads(params: {
   visitId: string;
   files: VisitPhotoUploadTargetInput[];
 }): Promise<VisitPhotoUploadTarget[]> {
-  const visit = await findVisitById(params.visitId);
+  const visit = await prisma.visitAssignment.findFirst({
+    where: {
+      id: params.visitId,
+      consultantId: params.consultantId,
+    },
+    select: visitWithRelationsSelect,
+  });
 
   if (!visit) {
     throw new VisitDiaryError("NOT_FOUND", "Atividade não encontrada.");
@@ -759,7 +788,13 @@ export async function cleanupConsultantUnsubmittedVisitPhotos(params: {
   visitId: string;
   photos: { pathname: string }[];
 }): Promise<void> {
-  const visit = await findVisitById(params.visitId);
+  const visit = await prisma.visitAssignment.findFirst({
+    where: {
+      id: params.visitId,
+      consultantId: params.consultantId,
+    },
+    select: visitWithRelationsSelect,
+  });
 
   if (!visit) {
     throw new VisitDiaryError("NOT_FOUND", "Atividade não encontrada.");
@@ -787,13 +822,12 @@ export async function requestVisitRevision(params: {
   note: unknown;
 }): Promise<void> {
   const note = normalizeNote(params.note, true);
-  const visit = await findVisitById(params.visitId);
+  const visit = await findManagerVisitForOperation(params);
 
   if (!visit) {
     throw new VisitDiaryError("NOT_FOUND", "Atividade não encontrada.");
   }
 
-  assertManagerCanOperateVisit({ visit, managerId: params.managerId });
   assertRequiredStatus(
     visit.status,
     ["SUBMITTED"],
@@ -824,13 +858,12 @@ export async function completeVisitAssignment(params: {
   note?: unknown;
 }): Promise<void> {
   const note = normalizeNote(params.note, false);
-  const visit = await findVisitById(params.visitId);
+  const visit = await findManagerVisitForOperation(params);
 
   if (!visit) {
     throw new VisitDiaryError("NOT_FOUND", "Atividade não encontrada.");
   }
 
-  assertManagerCanOperateVisit({ visit, managerId: params.managerId });
   assertRequiredStatus(
     visit.status,
     ["SUBMITTED"],
@@ -858,7 +891,7 @@ export async function completeVisitAssignment(params: {
   ]);
 }
 
-async function getApprovedManagersWithVisits() {
+async function getApprovedManagersForOversightDashboard() {
   return prisma.user.findMany({
     where: { role: "MANAGER", status: "APPROVED" },
     orderBy: [{ fullName: "asc" }, { username: "asc" }],
@@ -873,10 +906,6 @@ async function getApprovedManagersWithVisits() {
           id: true,
           fullName: true,
           username: true,
-          assignedVisits: {
-            orderBy: [{ createdAt: "desc" }],
-            select: visitWithRelationsSelect,
-          },
         },
       },
     },
@@ -884,11 +913,19 @@ async function getApprovedManagersWithVisits() {
 }
 
 export async function getVisitOversightDashboard(): Promise<OversightDashboard> {
-  const managers = await getApprovedManagersWithVisits();
-  const managerSummaries = managers.map((manager) => {
-    const visits = manager.consultants.flatMap((consultant) =>
-      consultant.assignedVisits.filter((visit) => visit.managerId === manager.id),
-    );
+  const managers = await getApprovedManagersForOversightDashboard();
+  const managerSummaries = await Promise.all(managers.map(async (manager) => {
+    const visits = await prisma.visitAssignment.findMany({
+      where: {
+        managerId: manager.id,
+        consultant: {
+          role: "CONSULTANT",
+          status: "APPROVED",
+          managerId: manager.id,
+        },
+      },
+      select: { status: true },
+    });
     const summary = buildSummary(visits);
 
     return {
@@ -898,7 +935,7 @@ export async function getVisitOversightDashboard(): Promise<OversightDashboard> 
       consultantsCount: manager.consultants.length,
       summary,
     };
-  });
+  }));
 
   return {
     managers: managerSummaries,
@@ -995,32 +1032,48 @@ export async function getVisitPhotoForViewer(params: {
   contentType: string;
   sizeBytes: number;
 }> {
-  const photo = await prisma.visitPhoto.findUnique({
-    where: { id: params.photoId },
-    select: {
-      pathname: true,
-      originalName: true,
-      contentType: true,
-      sizeBytes: true,
-      visitEvent: {
-        select: {
-          visitAssignment: {
-            select: visitWithRelationsSelect,
+  const photoSelect = {
+    pathname: true,
+    originalName: true,
+    contentType: true,
+    sizeBytes: true,
+  };
+  const photo =
+    params.viewerRole === "ADMIN"
+      ? await prisma.visitPhoto.findUnique({
+          where: { id: params.photoId },
+          select: photoSelect,
+        })
+      : await prisma.visitPhoto.findFirst({
+          where: {
+            id: params.photoId,
+            visitEvent: {
+              visitAssignment:
+                params.viewerRole === "CONSULTANT"
+                  ? { consultantId: params.viewerId }
+                  : params.viewerRole === "MANAGER"
+                    ? {
+                        managerId: params.viewerId,
+                        consultant: {
+                          role: "CONSULTANT",
+                          status: "APPROVED",
+                          managerId: params.viewerId,
+                        },
+                      }
+                    : {
+                        manager: {
+                          role: "MANAGER",
+                          status: "APPROVED",
+                        },
+                      },
+            },
           },
-        },
-      },
-    },
-  });
+          select: photoSelect,
+        });
 
   if (!photo) {
     throw new VisitDiaryError("NOT_FOUND", "Foto não encontrada.");
   }
-
-  assertVisitVisible({
-    visit: photo.visitEvent.visitAssignment,
-    viewerId: params.viewerId,
-    viewerRole: params.viewerRole,
-  });
 
   return {
     pathname: photo.pathname,

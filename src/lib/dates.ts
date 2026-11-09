@@ -61,3 +61,15 @@ export function formatDateBR(date: Date): string {
 export function isAfterDailyResetHour(date = new Date()): boolean {
   return getBrazilDateParts(date).hour >= DAILY_RESET_HOUR;
 }
+
+/**
+ * Retorna a data-calendario atual em Sao Paulo (sem o deslocamento de ciclo
+ * operacional usado por getOperationalDate), normalizada em meia-noite UTC.
+ * Usada para deduplicar disparos diarios que nao dependem do ciclo de
+ * previsao, como o lembrete de push das 9h.
+ */
+export function getBrazilCalendarDate(date = new Date()): Date {
+  const parts = getBrazilDateParts(date);
+
+  return new Date(Date.UTC(parts.year, parts.month - 1, parts.day));
+}

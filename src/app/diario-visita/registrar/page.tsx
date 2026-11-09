@@ -77,17 +77,24 @@ async function ManagerDashboard({ managerId }: { managerId: string }) {
 
   if (dashboard.consultants.length === 0) {
     return (
+      <>
+      <SummaryCards summary={dashboard.summary} />
       <Card>
-        <h2 className="text-lg font-bold">Nenhum consultor aprovado</h2>
+        <h2 className="text-lg font-bold">
+          Nenhum consultor está vinculado à sua equipe.
+        </h2>
         <p className="mt-2 text-sm leading-6 text-slate-600">
           Apenas consultores aprovados e vinculados a você por gerente aparecem
           nesta área.
         </p>
       </Card>
+      </>
     );
   }
 
   return (
+    <>
+    <SummaryCards summary={dashboard.summary} />
     <section className="grid gap-4">
       {dashboard.consultants.map((consultant) => (
         <Link
@@ -111,6 +118,7 @@ async function ManagerDashboard({ managerId }: { managerId: string }) {
         </Link>
       ))}
     </section>
+    </>
   );
 }
 

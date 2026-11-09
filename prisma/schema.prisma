@@ -80,6 +80,8 @@ model User {
   managedVisits              VisitAssignment[]    @relation("VisitAssignmentManager")
   visitEvents                VisitEvent[]         @relation("VisitEventAuthor")
   uploadedPhotos             VisitPhoto[]         @relation("VisitPhotoUploader")
+  pushSubscriptions          PushSubscription[]
+  lostOperations             LostOperation[]      @relation("LostOperationAuthor")
 
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
@@ -236,5 +238,62 @@ model VisitPhoto {
 
   @@index([visitEventId])
   @@index([uploadedById])
+  @@index([createdAt])
+}
+
+// Assinatura Web Push de um dispositivo/navegador do usuario. Um mesmo
+// usuario pode ter varias (celular, tablet, computador); o endpoint
+// identifica o dispositivo/navegador de forma unica.
+model PushSubscription {
+  id String @id @default(cuid())
+
+  userId String
+  user   User   @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  endpoint String @unique
+  p256dh   String
+  auth     String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([userId])
+}
+
+// Registro de execucao do lembrete diario de previsao (cron as 09h de
+// Brasilia), no mesmo espirito do ResetLog: evita reenviar a notificacao
+// caso o cron seja disparado mais de uma vez no mesmo dia.
+model PushReminderLog {
+  id String @id @default(cuid())
+
+  sentDate       DateTime    @unique
+  executedAt     DateTime    @default(now())
+  status         ResetStatus
+  recipientCount Int         @default(0)
+  message        String?
+
+  createdAt DateTime @default(now())
+}
+
+// Operacao perdida para banco concorrente, registrada pelo proprio usuario
+// (consultor ou gerente) para que sua hierarquia acompanhe. A visibilidade
+// segue a mesma regra da previsao: consultor ve so as suas, gerente ve as
+// suas e as dos consultores vinculados, regional/admin veem todas.
+model LostOperation {
+  id String @id @default(cuid())
+
+  authorId String
+  author   User   @relation("LostOperationAuthor", fields: [authorId], references: [id])
+
+  clientName     String
+  agency         String
+  competitorBank String
+  rate           Decimal @db.Decimal(7, 4)
+  operationType  String
+
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@index([authorId, createdAt])
   @@index([createdAt])
 }
