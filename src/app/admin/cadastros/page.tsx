@@ -22,7 +22,7 @@ export default async function AdminCadastrosPage({
   const status = typeof params.status === "string" ? params.status : null;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-10 text-slate-950">
+    <main className="min-h-dvh bg-slate-50 px-5 py-10 text-slate-950">
       <div className="mx-auto max-w-5xl space-y-6">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-end sm:justify-between">
           <div>

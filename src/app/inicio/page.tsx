@@ -24,63 +24,55 @@ export default async function InicioPage() {
       : null;
 
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-10 text-slate-950">
-      <div className="mx-auto max-w-3xl space-y-6">
-        <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
+    <main className="min-h-dvh bg-slate-50 px-5 py-6 text-slate-950 sm:py-10">
+      <div className="mx-auto max-w-3xl space-y-8">
+        <header className="flex items-center justify-between gap-4">
           <div>
-            <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">
-              ComercialPro
-            </p>
-            <h1 className="mt-2 text-3xl font-bold">
-              Bem-vindo, {user.fullName}
+            <p className="text-sm font-medium text-slate-500">ComercialPro</p>
+            <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
+              Olá, {user.fullName.split(" ")[0]}
             </h1>
-            <p className="mt-2 text-sm text-slate-600">
-              Escolha o que deseja acessar.
-            </p>
           </div>
           <LogoutButton />
         </header>
 
         {visitNotice ? (
-          <Link href="/diario-visita/registrar">
-            <Card variant="highlight" className="space-y-3">
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-                <div>
-                  <h2 className="text-lg font-bold">Diário de visita</h2>
-                  <p className="mt-2 text-sm leading-6 text-slate-700">
-                    {getVisitNoticeText(visitNotice)}
-                  </p>
-                </div>
-                <Badge variant="warning">
-                  {visitNotice.total} pendente
-                  {visitNotice.total === 1 ? "" : "s"}
-                </Badge>
-              </div>
+          <Link href="/diario-visita/registrar" className="block">
+            <Card
+              variant="highlight"
+              className="flex items-center justify-between gap-3 py-4"
+            >
+              <span className="font-semibold text-blue-950">
+                Visitas pendentes
+              </span>
+              <span className="flex items-center gap-2 text-sm font-semibold text-blue-900">
+                <Badge variant="warning">{visitNotice.total}</Badge>
+                Ver <span aria-hidden="true">→</span>
+              </span>
             </Card>
           </Link>
         ) : null}
 
-        <section className="grid gap-4 sm:grid-cols-2">
-          <MenuCard
-            href={previsaoHref}
-            title="Previsão"
-            description="Acompanhe e registre a previsão diária de pagamentos."
-          />
+        <section
+          aria-label="Menu principal"
+          className="grid grid-cols-2 gap-3 sm:gap-4"
+        >
+          <MenuCard href={previsaoHref} title="Previsão" icon="forecast" />
           <MenuCard
             href="/verificador-margem"
             title="Verificador de Margem"
-            description="Envie um contracheque em PDF e veja os dados extraídos."
+            icon="margin"
           />
           <MenuCard
             href="/diario-visita"
             title="Diário de visita"
-            description="Localize convênios e acompanhe atividades de visita."
+            icon="visits"
             badge={visitNotice?.total}
           />
           <MenuCard
             href="/operacao-perdida"
             title="Operação perdida"
-            description="Registre operações fechadas com bancos concorrentes e acompanhe os resultados."
+            icon="lost"
           />
         </section>
       </div>
@@ -91,44 +83,84 @@ export default async function InicioPage() {
 function MenuCard({
   href,
   title,
-  description,
+  icon,
   badge,
 }: {
   href: string;
   title: string;
-  description: string;
+  icon: "forecast" | "margin" | "visits" | "lost";
   badge?: number;
 }) {
   return (
-    <Link href={href}>
-      <Card className="flex h-full min-h-40 flex-col justify-between gap-4 transition hover:border-blue-200 hover:bg-blue-50">
-        <div>
-          <div className="flex items-start justify-between gap-3">
-            <h2 className="text-xl font-bold">{title}</h2>
-            {badge ? <Badge variant="warning">{badge}</Badge> : null}
-          </div>
-          <p className="mt-2 text-sm leading-6 text-slate-600">
-            {description}
-          </p>
+    <Link
+      href={href}
+      className="group block rounded-lg focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-blue-900"
+    >
+      <Card className="flex h-full min-h-32 flex-col justify-between gap-5 p-4 transition hover:border-blue-300 hover:bg-blue-50 sm:min-h-36 sm:p-5">
+        <div className="flex items-start justify-between gap-2">
+          <span className="flex h-10 w-10 items-center justify-center rounded-xl bg-blue-50 text-blue-900 group-hover:bg-white">
+            <MenuIcon name={icon} />
+          </span>
+          {badge ? <Badge variant="warning">{badge}</Badge> : null}
         </div>
-        <span className="text-sm font-semibold text-blue-900">Abrir →</span>
+        <div className="flex items-end justify-between gap-2">
+          <h2 className="text-base font-bold leading-snug sm:text-lg">
+            {title}
+          </h2>
+          <span
+            className="shrink-0 text-lg text-blue-900 transition-transform group-hover:translate-x-1"
+            aria-hidden="true"
+          >
+            →
+          </span>
+        </div>
       </Card>
     </Link>
   );
 }
 
-function getVisitNoticeText(notice: {
-  total: number;
-  assigned: number;
-  revisionRequested: number;
-}) {
-  if (notice.total > 1) {
-    return `Você possui ${notice.total} atividades pendentes. Veja em Diário de visita.`;
-  }
+function MenuIcon({ name }: { name: "forecast" | "margin" | "visits" | "lost" }) {
+  const paths = {
+    forecast: (
+      <>
+        <path d="M4 19V5" />
+        <path d="M4 19h16" />
+        <path d="m7 14 4-4 3 2 5-6" />
+      </>
+    ),
+    margin: (
+      <>
+        <path d="M12 3v18" />
+        <path d="M17 7.5c0-1.4-1.8-2.5-4.5-2.5S8 6.1 8 7.5 9.8 10 12.5 10 17 11.1 17 12.5 15.2 15 12.5 15 8 13.9 8 12.5" />
+        <path d="M17 16.5c0 1.4-1.8 2.5-4.5 2.5S8 17.9 8 16.5" />
+      </>
+    ),
+    visits: (
+      <>
+        <rect x="4" y="5" width="16" height="16" rx="2" />
+        <path d="M8 3v4M16 3v4M4 10h16M8 14h3M8 17h6" />
+      </>
+    ),
+    lost: (
+      <>
+        <path d="M12 3 3.5 7.5v9L12 21l8.5-4.5v-9L12 3Z" />
+        <path d="m8.5 9 7 7m0-7-7 7" />
+      </>
+    ),
+  };
 
-  if (notice.revisionRequested > 0) {
-    return "Seu gerente solicitou que uma visita seja refeita. Veja em Diário de visita.";
-  }
-
-  return "Seu gerente adicionou uma nova atividade para você. Veja em Diário de visita.";
+  return (
+    <svg
+      viewBox="0 0 24 24"
+      fill="none"
+      stroke="currentColor"
+      strokeWidth="1.8"
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      className="h-5 w-5"
+      aria-hidden="true"
+    >
+      {paths[name]}
+    </svg>
+  );
 }

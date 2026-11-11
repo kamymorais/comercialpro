@@ -34,7 +34,7 @@ export default async function RegionalConsultorEditPage({
   }
 
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-10 text-slate-950">
+    <main className="min-h-dvh bg-slate-50 px-5 py-10 text-slate-950">
       <div className="mx-auto max-w-3xl space-y-6">
         <header>
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">

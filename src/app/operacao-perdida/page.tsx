@@ -6,7 +6,7 @@ import { requireRole } from "@/lib/auth";
 
 export default async function LostOperationPage() {
   await requireRole(["ADMIN", "CONSULTANT", "MANAGER", "REGIONAL_MANAGER"]);
-  return <main className="min-h-screen bg-slate-50 px-5 py-10 text-slate-950"><div className="mx-auto max-w-3xl space-y-6">
+  return <main className="min-h-dvh bg-slate-50 px-5 py-10 text-slate-950"><div className="mx-auto max-w-3xl space-y-6">
     <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">ComercialPro</p><h1 className="mt-2 text-3xl font-bold">Operação perdida</h1><p className="mt-2 text-sm text-slate-600">Registre e consulte operações fechadas com a concorrência.</p></div><LogoutButton /></header>
     <BackToMenuBar />
     <section className="grid gap-4 sm:grid-cols-2"><ModuleCard href="/operacao-perdida/enviar" title="Enviar informações para meu gestor" description="Informe os dados da operação perdida."/><ModuleCard href="/operacao-perdida/consultar" title="Consultar minhas operações" description="Consulte, edite e compartilhe suas operações e as da sua equipe."/></section>

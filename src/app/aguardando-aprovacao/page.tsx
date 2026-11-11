@@ -3,7 +3,7 @@ import { Card } from "@/components/ui/Card";
 
 export default function AguardandoAprovacaoPage() {
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-5 py-10 text-slate-950">
+    <main className="flex min-h-dvh items-center justify-center bg-slate-50 px-5 py-10 text-slate-950">
       <section className="w-full max-w-md">
         <Card>
           <h1 className="text-2xl font-bold">Cadastro em análise</h1>

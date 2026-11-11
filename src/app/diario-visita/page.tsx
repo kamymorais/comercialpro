@@ -8,7 +8,7 @@ export default async function DiarioVisitaPage() {
   await requireRole(["ADMIN", "CONSULTANT", "MANAGER", "REGIONAL_MANAGER"]);
 
   return (
-    <main className="min-h-screen bg-slate-50 px-5 py-10 text-slate-950">
+    <main className="min-h-dvh bg-slate-50 px-5 py-10 text-slate-950">
       <div className="mx-auto max-w-3xl space-y-6">
         <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
           <div>

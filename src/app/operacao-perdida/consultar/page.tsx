@@ -23,7 +23,7 @@ export default async function ConsultLostOperationsPage({ searchParams }: { sear
   const summary = summarizeLostOperations(operations);
   const topAgency = summary.groups.find((group) => group.id === "convenio")?.rows[0];
 
-  return <main className="min-h-screen bg-slate-50 px-5 py-10 text-slate-950"><div className="mx-auto max-w-6xl space-y-6">
+  return <main className="min-h-dvh bg-slate-50 px-5 py-10 text-slate-950"><div className="mx-auto max-w-6xl space-y-6">
     <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">Operação perdida</p><h1 className="mt-2 text-3xl font-bold">Consultar minhas operações</h1><p className="mt-2 text-sm text-slate-600">{user.role === "CONSULTANT" ? "Você está vendo somente as operações que registrou." : user.role === "MANAGER" ? "Você está vendo suas operações e as dos seus consultores." : "Você está vendo as operações de toda a estrutura."}</p></div><LogoutButton /></header>
     <div className="flex flex-wrap items-center justify-between gap-3"><BackToMenuBar /><Link href="/operacao-perdida/enviar" className="text-sm font-semibold text-blue-900">+ Registrar operação</Link></div>
     {query.sucesso ? <p role="status" className="rounded-lg bg-green-50 p-3 text-sm text-green-800">{query.sucesso === "editada" ? "Operação atualizada com sucesso." : "Operação registrada com sucesso."}</p> : null}

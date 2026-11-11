@@ -8,7 +8,7 @@ export default async function CadastroPage() {
   const managers = await listApprovedManagers();
 
   return (
-    <main className="flex min-h-screen items-center justify-center bg-slate-50 px-5 py-10 text-slate-950">
+    <main className="flex min-h-dvh items-center justify-center bg-slate-50 px-5 py-10 text-slate-950">
       <section className="w-full max-w-md">
         <div className="mb-6 text-center">
           <p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">
