@@ -3,6 +3,15 @@ import { Badge } from "@/components/ui/Badge";
 import { Card } from "@/components/ui/Card";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import { getDashboardPathByRole, requireRole } from "@/lib/auth";
+import type { Role } from "@/generated/prisma/client";
+import { getBrazilDateParts } from "@/lib/dates";
+import { formatBRL } from "@/lib/money";
+import {
+  getAdminForecastPanel,
+  getConsultantForecast,
+  getManagerForecastSummary,
+  getRegionalForecastSummary,
+} from "@/services/forecast.service";
 import { getConsultantPendingVisitNotice } from "@/services/visit.service";
 
 export default async function InicioPage() {
@@ -18,10 +27,13 @@ export default async function InicioPage() {
   }
 
   const previsaoHref = getDashboardPathByRole(user.role);
-  const visitNotice =
+  const [visitNotice, forecast] = await Promise.all([
     user.role === "CONSULTANT"
-      ? await getConsultantPendingVisitNotice(user.id)
-      : null;
+      ? getConsultantPendingVisitNotice(user.id)
+      : Promise.resolve(null),
+    getHomeForecast(user.role, user.id),
+  ]);
+  const greeting = getTimeGreeting(getBrazilDateParts().hour);
 
   return (
     <main className="min-h-dvh bg-slate-50 px-5 py-6 text-slate-950 sm:py-10">
@@ -30,11 +42,23 @@ export default async function InicioPage() {
           <div>
             <p className="text-sm font-medium text-slate-500">ComercialPro</p>
             <h1 className="mt-1 text-2xl font-bold tracking-tight sm:text-3xl">
-              Olá, {user.fullName.split(" ")[0]}
+              Olá, {user.fullName.split(" ")[0]}! {greeting}!
             </h1>
           </div>
           <LogoutButton />
         </header>
+
+        <Card variant="highlight" className="flex items-center justify-between gap-4 py-5">
+          <div>
+            <p className="text-sm font-medium text-blue-900">{forecast.label}</p>
+            {forecast.note ? (
+              <p className="mt-1 text-xs text-slate-600">{forecast.note}</p>
+            ) : null}
+          </div>
+          <p className="text-right text-2xl font-bold tracking-tight text-blue-950 sm:text-3xl">
+            {formatBRL(forecast.amount)}
+          </p>
+        </Card>
 
         {visitNotice ? (
           <Link href="/diario-visita/registrar" className="block">
@@ -78,6 +102,47 @@ export default async function InicioPage() {
       </div>
     </main>
   );
+}
+
+async function getHomeForecast(role: Role, userId: string) {
+  switch (role) {
+    case "CONSULTANT": {
+      const forecast = await getConsultantForecast(userId);
+      return {
+        label: "Sua previsão hoje",
+        amount: forecast.totalValue,
+        note: forecast.submittedAt ? null : "Previsão ainda não enviada",
+      };
+    }
+    case "MANAGER": {
+      const forecast = await getManagerForecastSummary(userId);
+      return {
+        label: "Previsão da equipe hoje",
+        amount: forecast.paymentForecastTotal,
+        note: null,
+      };
+    }
+    case "REGIONAL_MANAGER": {
+      const forecast = await getRegionalForecastSummary({ regionalId: userId });
+      return { label: "Previsão total hoje", amount: forecast.total, note: null };
+    }
+    case "ADMIN": {
+      const forecast = await getAdminForecastPanel();
+      return { label: "Previsão total hoje", amount: forecast.total, note: null };
+    }
+  }
+}
+
+function getTimeGreeting(hour: number): string {
+  if (hour >= 5 && hour < 12) {
+    return "Bom dia";
+  }
+
+  if (hour >= 12 && hour < 18) {
+    return "Boa tarde";
+  }
+
+  return "Boa noite";
 }
 
 function MenuCard({
