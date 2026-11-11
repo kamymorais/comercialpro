@@ -52,18 +52,3 @@ export function summarizeLostOperations(operations: LostOperationSummaryInput[])
 export function formatPercent(value: number) {
   return `${value.toLocaleString("pt-BR", { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`;
 }
-
-function formatNumber(value: number) {
-  return value.toLocaleString("pt-BR", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-}
-
-/** Linhas de resumo para anexar ao final do CSV de operações perdidas. */
-export function summaryCsvRows(operations: LostOperationSummaryInput[]): string[][] {
-  const summary = summarizeLostOperations(operations);
-  const rows: string[][] = [[], ["RESUMO"], ["Total de operações", String(summary.totalCount)], ["Valor total acumulado (R$)", formatNumber(summary.totalValue)]];
-  for (const group of summary.groups) {
-    rows.push([], [group.title.toUpperCase(), "Qtd. operações", "Valor acumulado (R$)", "% do valor total"]);
-    for (const row of group.rows) rows.push([row.label, String(row.count), formatNumber(row.total), formatPercent(row.percent)]);
-  }
-  return rows;
-}

@@ -4,7 +4,7 @@ import { ShareLostOperations } from "@/components/lost-operation/ShareLostOperat
 import { Card } from "@/components/ui/Card";
 import { LogoutButton } from "@/components/ui/LogoutButton";
 import { requireRole } from "@/lib/auth";
-import { formatPercent, summarizeLostOperations, summaryCsvRows } from "@/lib/lost-operation-summary";
+import { formatPercent, summarizeLostOperations } from "@/lib/lost-operation-summary";
 import { listVisibleLostOperations } from "@/services/lost-operation.service";
 
 const brl = (value: number) => value.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
@@ -12,7 +12,7 @@ const brl = (value: number) => value.toLocaleString("pt-BR", { style: "currency"
 export default async function ConsultLostOperationsPage({ searchParams }: { searchParams: Promise<{ sucesso?: string }> }) {
   const user = await requireRole(["ADMIN", "CONSULTANT", "MANAGER", "REGIONAL_MANAGER"]);
   const [operations, query] = await Promise.all([listVisibleLostOperations({ id: user.id, role: user.role }), searchParams]);
-  const csv = buildCsv(operations.map((op) => [op.clientName, op.operationValue?.toLocaleString("pt-BR", { minimumFractionDigits: 2 }) ?? "", op.agency, op.competitorBank, op.rate.toFixed(4).replace(".", ","), op.operationType, op.authorName, op.managerName ?? "", op.createdAt.toLocaleDateString("pt-BR")]), summaryCsvRows(operations));
+  const csv = buildCsv(operations.map((op) => [op.clientName, op.operationValue?.toLocaleString("pt-BR", { minimumFractionDigits: 2 }) ?? "", op.agency, op.competitorBank, op.rate.toFixed(4).replace(".", ","), op.operationType, op.authorName, op.managerName ?? "", op.createdAt.toLocaleDateString("pt-BR")]));
   const summary = summarizeLostOperations(operations);
   return <main className="min-h-screen bg-slate-50 px-5 py-10 text-slate-950"><div className="mx-auto max-w-6xl space-y-6">
     <header className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"><div><p className="text-sm font-semibold uppercase tracking-[0.18em] text-blue-900">Operação perdida</p><h1 className="mt-2 text-3xl font-bold">Consultar minhas operações</h1><p className="mt-2 text-sm text-slate-600">{user.role === "CONSULTANT" ? "Você está vendo somente as operações que registrou." : user.role === "MANAGER" ? "Você está vendo suas operações e as dos seus consultores." : "Você está vendo as operações de toda a estrutura."}</p></div><LogoutButton /></header>
@@ -28,7 +28,7 @@ export default async function ConsultLostOperationsPage({ searchParams }: { sear
   </div></main>;
 }
 
-function buildCsv(rows: string[][], summaryRows: string[][]) {
+function buildCsv(rows: string[][]) {
   const headers = ["Cliente", "Valor da operação (R$)", "Órgão", "Banco concorrente", "Taxa (%)", "Tipo de operação", "Consultor", "Gerente", "Data"];
-  return [headers, ...rows, ...summaryRows].map((row) => row.map((value) => `"${value.replaceAll('"', '""')}"`).join(";")).join("\r\n");
+  return [headers, ...rows].map((row) => row.map((value) => `"${value.replaceAll('"', '""')}"`).join(";")).join("\r\n");
 }
