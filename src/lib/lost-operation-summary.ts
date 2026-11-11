@@ -5,46 +5,49 @@ export type LostOperationSummaryInput = {
   operationValue: number | null;
 };
 
-export type LostOperationSummaryRow = {
+export type LostOperationSummaryRow<T extends LostOperationSummaryInput = LostOperationSummaryInput> = {
   label: string;
   count: number;
   total: number;
   percent: number;
+  items: T[];
 };
 
-export type LostOperationSummaryGroup = {
+export type LostOperationSummaryGroup<T extends LostOperationSummaryInput = LostOperationSummaryInput> = {
+  id: "convenio" | "operador" | "banco";
   title: string;
-  rows: LostOperationSummaryRow[];
+  rows: LostOperationSummaryRow<T>[];
 };
 
-export type LostOperationSummary = {
+export type LostOperationSummary<T extends LostOperationSummaryInput = LostOperationSummaryInput> = {
   totalValue: number;
   totalCount: number;
-  groups: LostOperationSummaryGroup[];
+  groups: LostOperationSummaryGroup<T>[];
 };
 
-const GROUPS: { title: string; key: (op: LostOperationSummaryInput) => string }[] = [
-  { title: "Por convênio", key: (op) => op.agency },
-  { title: "Por operador", key: (op) => op.authorName },
-  { title: "Por banco", key: (op) => op.competitorBank },
+const GROUPS: { id: LostOperationSummaryGroup["id"]; title: string; key: (op: LostOperationSummaryInput) => string }[] = [
+  { id: "convenio", title: "Operações perdidas por convênio", key: (op) => op.agency },
+  { id: "operador", title: "Operações perdidas por operador", key: (op) => op.authorName },
+  { id: "banco", title: "Operações perdidas por banco", key: (op) => op.competitorBank },
 ];
 
-export function summarizeLostOperations(operations: LostOperationSummaryInput[]): LostOperationSummary {
+export function summarizeLostOperations<T extends LostOperationSummaryInput>(operations: T[]): LostOperationSummary<T> {
   const totalValue = operations.reduce((sum, op) => sum + (op.operationValue ?? 0), 0);
-  const groups = GROUPS.map(({ title, key }) => {
-    const buckets = new Map<string, LostOperationSummaryRow>();
+  const groups = GROUPS.map(({ id, title, key }) => {
+    const buckets = new Map<string, LostOperationSummaryRow<T>>();
     for (const op of operations) {
       const label = key(op).trim() || "Não informado";
-      const id = label.toLocaleLowerCase("pt-BR");
-      const bucket = buckets.get(id) ?? { label, count: 0, total: 0, percent: 0 };
+      const bucketId = label.toLocaleLowerCase("pt-BR");
+      const bucket = buckets.get(bucketId) ?? { label, count: 0, total: 0, percent: 0, items: [] };
       bucket.count += 1;
       bucket.total += op.operationValue ?? 0;
-      buckets.set(id, bucket);
+      bucket.items.push(op);
+      buckets.set(bucketId, bucket);
     }
     const rows = [...buckets.values()]
       .map((row) => ({ ...row, percent: totalValue > 0 ? (row.total / totalValue) * 100 : 0 }))
       .sort((a, b) => b.total - a.total || b.count - a.count || a.label.localeCompare(b.label, "pt-BR"));
-    return { title, rows };
+    return { id, title, rows };
   });
   return { totalValue, totalCount: operations.length, groups };
 }
